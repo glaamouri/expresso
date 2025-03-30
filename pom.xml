@@ -7,7 +7,7 @@
     <groupId>work.ghassen</groupId>
     <artifactId>expresso</artifactId>
     <description>A lightweight, zero-dependency Java expression evaluator library that allows you to evaluate dynamic expressions in your Java applications.</description>
-    <version>1.0</version>
+    <version>1.0.1</version>
     <url>https://expresso.ghassen.work/</url>
 
     <scm>
