@@ -209,12 +209,57 @@ public class Context {
     registerFunction("lowerCase", args -> ((String) args[0]).toLowerCase());
     registerFunction("length", args -> ((String) args[0]).length());
     registerFunction("trim", args -> ((String) args[0]).trim());
+    registerFunction("substring", args -> {
+        String str = (String) args[0];
+        int start = ((Number) args[1]).intValue();
+        int length = args.length > 2 ? ((Number) args[2]).intValue() : str.length() - start;
+        return str.substring(start, Math.min(start + length, str.length()));
+    });
+    registerFunction("replace", args -> {
+        String str = (String) args[0];
+        String oldStr = (String) args[1];
+        String newStr = (String) args[2];
+        return str.replace(oldStr, newStr);
+    });
+    registerFunction("contains", args -> {
+        String str = (String) args[0];
+        String search = (String) args[1];
+        return str.contains(search);
+    });
 
     // Math functions
     registerFunction("abs", args -> Math.abs(((Number) args[0]).doubleValue()));
     registerFunction("ceil", args -> Math.ceil(((Number) args[0]).doubleValue()));
     registerFunction("floor", args -> Math.floor(((Number) args[0]).doubleValue()));
-    registerFunction("round", args -> Math.round(((Number) args[0]).doubleValue()));
+    registerFunction("round", args -> {
+        double num = ((Number) args[0]).doubleValue();
+        if (args.length > 1) {
+            int decimals = ((Number) args[1]).intValue();
+            double factor = Math.pow(10, decimals);
+            return Math.round(num * factor) / factor;
+        }
+        return (long) Math.round(num);
+    });
+    registerFunction("max", args -> {
+        double a = ((Number) args[0]).doubleValue();
+        double b = ((Number) args[1]).doubleValue();
+        return Math.max(a, b);
+    });
+    registerFunction("min", args -> {
+        double a = ((Number) args[0]).doubleValue();
+        double b = ((Number) args[1]).doubleValue();
+        return Math.min(a, b);
+    });
+    registerFunction("pow", args -> {
+        double base = ((Number) args[0]).doubleValue();
+        double exponent = ((Number) args[1]).doubleValue();
+        return Math.pow(base, exponent);
+    });
+    registerFunction("sqrt", args -> {
+        double num = ((Number) args[0]).doubleValue();
+        return Math.sqrt(num);
+    });
+    registerFunction("random", args -> Math.random());
 
     // Logic functions
     registerFunction("isNull", args -> args[0] == null);
@@ -226,5 +271,45 @@ public class Context {
           }
           return null;
         });
+    registerFunction("isEmpty", args -> {
+        if (args[0] == null) return true;
+        if (args[0] instanceof String) return ((String) args[0]).isEmpty();
+        if (args[0] instanceof List) return ((List<?>) args[0]).isEmpty();
+        if (args[0] instanceof Map) return ((Map<?, ?>) args[0]).isEmpty();
+        if (args[0].getClass().isArray()) return java.lang.reflect.Array.getLength(args[0]) == 0;
+        return false;
+    });
+    registerFunction("isNumber", args -> args[0] instanceof Number);
+    registerFunction("isString", args -> args[0] instanceof String);
+    registerFunction("isBoolean", args -> args[0] instanceof Boolean);
+         
+    // Date functions
+    registerFunction("format", args -> {
+        java.time.LocalDate date = (java.time.LocalDate) args[0];
+        String pattern = (String) args[1];
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern(pattern);
+        return date.format(formatter);
+    });
+    
+    registerFunction("parseDate", args -> {
+        String dateString = (String) args[0];
+        String pattern = (String) args[1];
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern(pattern);
+        return java.time.LocalDate.parse(dateString, formatter);
+    });
+    
+    registerFunction("now", args -> java.time.LocalDate.now());
+    
+    registerFunction("addDays", args -> {
+        java.time.LocalDate date = (java.time.LocalDate) args[0];
+        int days = ((Number) args[1]).intValue();
+        return date.plusDays(days);
+    });
+    
+    registerFunction("dateDiff", args -> {
+        java.time.LocalDate date1 = (java.time.LocalDate) args[0];
+        java.time.LocalDate date2 = (java.time.LocalDate) args[1];
+        return java.time.temporal.ChronoUnit.DAYS.between(date1, date2);
+    });
   }
 }

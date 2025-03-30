@@ -3,14 +3,20 @@ package com.expresso;
 import com.expresso.context.Context;
 import com.expresso.exception.EvaluationException;
 import com.expresso.exception.PropertyNotFoundException;
+import com.expresso.exception.SyntaxException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ExpressionEvaluatorTest {
     private final ExpressionEvaluator evaluator = new ExpressionEvaluator();
@@ -124,7 +130,7 @@ class ExpressionEvaluatorTest {
         assertEquals("default", evaluator.evaluate("coalesce(null, \"default\")", context));
 
         // Negative numbers
-        assertEquals(-42L, evaluator.evaluate("-42", context));
+        assertEquals(-42.0, evaluator.evaluate("-42", context));
         assertEquals(42.0, evaluator.evaluate("abs(-42)", context));
 
         // Decimal numbers
@@ -290,6 +296,291 @@ class ExpressionEvaluatorTest {
         });
         assertThrows(EvaluationException.class, () ->
                 evaluator.evaluate("divide(10, 0)", context));
+    }
+
+    @Test
+    void testDateFunctions() {
+        Context context = new Context();
+        
+        // Set a known date for testing
+        java.time.LocalDate testDate = java.time.LocalDate.of(2023, 3, 30);
+        context.setVariable("date", testDate);
+        
+        // Test date formatting
+        assertEquals("2023-03-30", evaluator.evaluate("format($date, 'yyyy-MM-dd')", context));
+        assertEquals("30/03/2023", evaluator.evaluate("format($date, 'dd/MM/yyyy')", context));
+        
+        // Test adding days
+        java.time.LocalDate expectedDate = testDate.plusDays(5);
+        String expectedFormatted = expectedDate.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        assertEquals(expectedFormatted, evaluator.evaluate("format(addDays($date, 5), 'yyyy-MM-dd')", context));
+        
+        // Test parsing dates
+        String dateStr = "2022-12-25";
+        java.time.LocalDate parsedDate = java.time.LocalDate.parse(dateStr, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        assertEquals(parsedDate, evaluator.evaluate("parseDate('2022-12-25', 'yyyy-MM-dd')", context));
+        
+        // Test date difference
+        context.setVariable("date2", java.time.LocalDate.of(2023, 4, 10));
+        assertEquals(11L, evaluator.evaluate("dateDiff($date, $date2)", context));
+        
+        // Test now() function returns a LocalDate
+        Object now = evaluator.evaluate("now()", context);
+        assertTrue(now instanceof java.time.LocalDate);
+    }
+
+    @Test
+    void testNestedFunctionCalls() {
+        Context context = new Context();
+        
+        // Test nested string functions
+        context.setVariable("name", "  John Doe  ");
+        assertEquals("JOHN", evaluator.evaluate("upperCase(substring(trim($name), 0, 4))", context));
+        
+        // Test nested math functions
+        context.setVariable("x", 3);
+        context.setVariable("y", 4);
+        assertEquals(5.0, evaluator.evaluate("round(sqrt(pow($x, 2) + pow($y, 2)), 0)", context));
+        
+        // Test nested date functions
+        context.setVariable("startDate", LocalDate.of(2023, 1, 1));
+        String result = evaluator.evaluate(
+            "format(addDays(parseDate('2023-01-01', 'yyyy-MM-dd'), 5), 'yyyy-MM-dd')", 
+            context
+        ).toString();
+        assertEquals("2023-01-06", result);
+    }
+
+    @Test
+    void testArithmeticOperations() {
+        Context context = new Context();
+        
+        // Basic arithmetic
+        assertEquals(10.0, evaluator.evaluate("5 + 5", context));
+        assertEquals(0.0, evaluator.evaluate("5 - 5", context));
+        assertEquals(25.0, evaluator.evaluate("5 * 5", context));
+        assertEquals(1.0, evaluator.evaluate("5 / 5", context));
+        assertEquals(2.0, evaluator.evaluate("5 % 3", context));
+        
+        // Order of operations
+        assertEquals(15.0, evaluator.evaluate("5 + 5 * 2", context));
+        assertEquals(20.0, evaluator.evaluate("(5 + 5) * 2", context));
+        assertEquals(7.0, evaluator.evaluate("5 + 6 / 3", context));
+        assertEquals(7.5, evaluator.evaluate("(5 + 10) / 2", context));
+        
+        // Mixed types
+        assertEquals(5.5, evaluator.evaluate("5 + 0.5", context));
+        assertEquals(10.5, evaluator.evaluate("10 + 0.5", context));
+        
+        // Negative numbers
+        assertEquals(-5.0, evaluator.evaluate("-5", context));
+        assertEquals(-15.0, evaluator.evaluate("-5 * 3", context));
+        assertEquals(-2.0, evaluator.evaluate("-(5 - 3)", context));
+        
+        // Complex expressions
+        assertEquals(21.0, evaluator.evaluate("3 * (5 + 2)", context));
+        assertEquals(13.0, evaluator.evaluate("5 + 2 * 5 - 2", context));
+        assertEquals(12.0, evaluator.evaluate("(5 + 2) * (10 / 5) - 2", context));
+        
+        // With variables
+        context.setVariable("x", 10);
+        context.setVariable("y", 5);
+        assertEquals(15.0, evaluator.evaluate("$x + $y", context));
+        assertEquals(5.0, evaluator.evaluate("$x - $y", context));
+        assertEquals(50.0, evaluator.evaluate("$x * $y", context));
+        assertEquals(2.0, evaluator.evaluate("$x / $y", context));
+        assertEquals(0.0, evaluator.evaluate("$x % $y", context));
+        
+        // With function results
+        assertEquals(7.0, evaluator.evaluate("abs(-2) + 5", context));
+        assertEquals(9.0, evaluator.evaluate("ceil(3.4) + floor(5.7)", context));
+    }
+    
+    @Test
+    void testAdvancedNestedFunctionCalls() {
+        Context context = new Context();
+        
+        // Multiple levels of nesting
+        assertEquals(4.0, evaluator.evaluate("abs(ceil(sqrt(25)) - 1)", context));
+        
+        // Nesting with string functions
+        context.setVariable("text", "  hello WORLD  ");
+        assertEquals("HELLO WORLD", evaluator.evaluate("upperCase(trim($text))", context));
+        assertEquals("hello world", evaluator.evaluate("lowerCase(trim($text))", context));
+        assertEquals("HEL", evaluator.evaluate("upperCase(substring(trim($text), 0, 3))", context));
+        
+        // Nesting with math functions
+        context.setVariable("num", 16.8);
+        assertEquals(4.0, evaluator.evaluate("sqrt(floor($num))", context));
+        assertEquals(5L, evaluator.evaluate("round(sqrt(abs($num)) + 1)", context));
+        
+        // Complex arithmetic with functions
+        context.setVariable("a", 3);
+        context.setVariable("b", 4);
+        assertEquals(5.0, evaluator.evaluate("sqrt(pow($a, 2) + pow($b, 2))", context));
+        assertEquals(25.0, evaluator.evaluate("pow(sqrt(pow($a, 2) + pow($b, 2)), 2)", context));
+        
+        // Mixing function calls and arithmetic
+        assertEquals(15.0, evaluator.evaluate("sqrt(25) * 3", context));
+        assertEquals(10.0, evaluator.evaluate("sqrt(25) + sqrt(25)", context));
+        assertEquals(4.0, evaluator.evaluate("pow(2, abs(-2))", context));
+    }
+    
+    @Test
+    void testAdvancedDateFunctions() {
+        Context context = new Context();
+        
+        // Setup test dates
+        LocalDate date1 = LocalDate.of(2023, 3, 15);
+        LocalDate date2 = LocalDate.of(2023, 4, 20);
+        context.setVariable("date1", date1);
+        context.setVariable("date2", date2);
+        
+        // Test date difference
+        assertEquals(36L, evaluator.evaluate("dateDiff($date1, $date2)", context));
+        assertEquals(-36L, evaluator.evaluate("dateDiff($date2, $date1)", context));
+        
+        // Test adding days and chaining operations
+        assertEquals("2023-03-25", evaluator.evaluate("format(addDays($date1, 10), 'yyyy-MM-dd')", context));
+        assertEquals("2023-03-05", evaluator.evaluate("format(addDays($date1, -10), 'yyyy-MM-dd')", context));
+        
+        // Complex date manipulation with nested calls
+        String complexDateExpr = evaluator.evaluate(
+            "format(addDays(parseDate(format($date1, 'yyyy-MM-dd'), 'yyyy-MM-dd'), 30), 'yyyy-MM-dd')", 
+            context
+        ).toString();
+        assertEquals("2023-04-14", complexDateExpr);
+        
+        // Test with arithmetic operations
+        context.setVariable("days", 5);
+        context.setVariable("extraDays", 3);
+        assertEquals("2023-03-23", evaluator.evaluate("format(addDays($date1, $days + $extraDays), 'yyyy-MM-dd')", context));
+    }
+    
+    @Test
+    void testStringManipulation() {
+        Context context = new Context();
+        
+        // Test string concatenation with +
+        assertEquals("HelloWorld", evaluator.evaluate("'Hello' + 'World'", context));
+        assertEquals("Hello123", evaluator.evaluate("'Hello' + 123", context));
+        assertEquals("123Hello", evaluator.evaluate("123 + 'Hello'", context));
+        
+        // Test string functions
+        assertEquals("hello", evaluator.evaluate("lowerCase('HELLO')", context));
+        assertEquals("WORLD", evaluator.evaluate("upperCase('world')", context));
+        assertEquals(5, evaluator.evaluate("length('Hello')", context));
+        assertEquals("Hello", evaluator.evaluate("trim('  Hello  ')", context));
+        
+        // Test substring
+        assertEquals("Hell", evaluator.evaluate("substring('Hello', 0, 4)", context));
+        assertEquals("ello", evaluator.evaluate("substring('Hello', 1)", context));
+        
+        // Test replace
+        assertEquals("Hallo World", evaluator.evaluate("replace('Hello World', 'e', 'a')", context));
+        
+        // Test contains
+        assertEquals(true, evaluator.evaluate("contains('Hello World', 'World')", context));
+        assertEquals(false, evaluator.evaluate("contains('Hello World', 'Goodbye')", context));
+        
+        // Nested string operations
+        assertEquals("HELLO", evaluator.evaluate("upperCase(trim('  hello  '))", context));
+        assertEquals(3, evaluator.evaluate("length(substring('Hello', 1, 3))", context));
+    }
+    
+    @Test
+    void testLogicalOperations() {
+        Context context = new Context();
+        
+        // Setup test variables
+        context.setVariable("age", 25);
+        context.setVariable("isStudent", true);
+        context.setVariable("score", 85);
+        
+        // NOT operator
+        assertEquals(false, evaluator.evaluate("!true", context));
+        assertEquals(true, evaluator.evaluate("!false", context));
+        assertEquals(false, evaluator.evaluate("!$isStudent", context));
+        
+        // Complex conditions - will need to implement comparison operators
+        context.setVariable("x", 10);
+        context.setVariable("y", 20);
+        context.setVariable("z", 10);
+        
+        // Test isEmpty function
+        assertEquals(true, evaluator.evaluate("isEmpty('')", context));
+        assertEquals(false, evaluator.evaluate("isEmpty('hello')", context));
+        context.setVariable("emptyList", List.of());
+        context.setVariable("nonEmptyList", List.of(1, 2, 3));
+        assertEquals(true, evaluator.evaluate("isEmpty($emptyList)", context));
+        assertEquals(false, evaluator.evaluate("isEmpty($nonEmptyList)", context));
+        
+        // Type checking functions
+        assertEquals(true, evaluator.evaluate("isString('hello')", context));
+        assertEquals(false, evaluator.evaluate("isString(123)", context));
+        assertEquals(true, evaluator.evaluate("isNumber(123)", context));
+        assertEquals(false, evaluator.evaluate("isNumber('hello')", context));
+        assertEquals(true, evaluator.evaluate("isBoolean(true)", context));
+        assertEquals(false, evaluator.evaluate("isBoolean(123)", context));
+    }
+    
+    @Test
+    void testErrorHandlingAndEdgeCases() {
+        Context context = new Context();
+        
+        // Division by zero
+        assertThrows(EvaluationException.class, () -> evaluator.evaluate("5 / 0", context));
+        assertThrows(EvaluationException.class, () -> evaluator.evaluate("5 % 0", context));
+        
+        // Type errors in operations
+        assertThrows(EvaluationException.class, () -> evaluator.evaluate("'hello' * 5", context));
+        assertThrows(EvaluationException.class, () -> evaluator.evaluate("'hello' - 'world'", context));
+        
+        // Incorrect function arguments
+        assertThrows(EvaluationException.class, () -> evaluator.evaluate("sqrt('hello')", context));
+        assertThrows(EvaluationException.class, () -> evaluator.evaluate("pow(2)", context)); // Missing second argument
+        
+        // Parse errors
+        assertThrows(SyntaxException.class, () -> evaluator.evaluate("5 + ", context));
+        assertThrows(SyntaxException.class, () -> evaluator.evaluate("(5 + 3", context)); // Unclosed parenthesis
+        
+        // Nonexistent variable access
+        assertThrows(PropertyNotFoundException.class, () -> evaluator.evaluate("$missingVar", context));
+        
+        // Use null-safe property access for the null coalescing test
+        context.setVariable("obj", null);
+        assertEquals("default", evaluator.evaluate("$obj?.value ?? 'default'", context));
+        
+        // Null value handling
+        context.setVariable("nullVar", null);
+        
+        // Test that nullVar exists and is null
+        Object nullVarValue = context.getVariable("nullVar");
+        assertEquals(null, nullVarValue);
+        
+        // Direct isNull test with existing null variable
+        assertEquals(true, evaluator.evaluate("isNull($nullVar)", context));
+        
+        // Direct isNull test with nonexistent variable
+        assertEquals(true, evaluator.evaluate("isNull($nonExistentVar)", context));
+        
+        // Test with nullVar in coalesce function (should not throw exception)
+        assertEquals("default", evaluator.evaluate("coalesce($nullVar, 'default')", context));
+        
+        // Test with nonexistent variable in coalesce function (should not throw exception)
+        assertEquals("default", evaluator.evaluate("coalesce($nonExistentVar, 'default')", context));
+        
+        // Test nested function calls with isNull
+        assertEquals(true, evaluator.evaluate("isNull(coalesce($nonExistentVar, null))", context));
+        
+        // Complex null coalescing chains
+        Map<String, Object> profile = null;
+        Map<String, Object> user = new HashMap<>();
+        user.put("profile", profile);
+        Map<String, Object> data = new HashMap<>();
+        data.put("user", user);
+        context.setVariable("data", data);
+        assertEquals("Unknown", evaluator.evaluate("$data?.user?.profile?.name ?? 'Unknown'", context));
     }
 
     public static class Person {

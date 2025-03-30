@@ -19,6 +19,74 @@ public class Parser {
     }
 
     private Expression parseExpression() {
+        return parseAdditive();
+    }
+
+    private Expression parseAdditive() {
+        Expression left = parseMultiplicative();
+        skipWhitespace();
+
+        while (position < input.length()) {
+            char operator = input.charAt(position);
+            if (operator != '+' && operator != '-') {
+                break;
+            }
+            position++; // Skip the operator
+            skipWhitespace();
+
+            Expression right = parseMultiplicative();
+            left = new BinaryExpression(left, right, operator == '+' ? BinaryExpression.Operator.ADD : BinaryExpression.Operator.SUBTRACT);
+            skipWhitespace();
+        }
+
+        return left;
+    }
+
+    private Expression parseMultiplicative() {
+        Expression left = parseUnary();
+        skipWhitespace();
+
+        while (position < input.length()) {
+            char operator = input.charAt(position);
+            if (operator != '*' && operator != '/' && operator != '%') {
+                break;
+            }
+            position++; // Skip the operator
+            skipWhitespace();
+
+            Expression right = parseUnary();
+            if (operator == '*') {
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.MULTIPLY);
+            } else if (operator == '/') {
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.DIVIDE);
+            } else {
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.MODULO);
+            }
+            skipWhitespace();
+        }
+
+        return left;
+    }
+
+    private Expression parseUnary() {
+        skipWhitespace();
+        if (position < input.length()) {
+            char c = input.charAt(position);
+            if (c == '-') {
+                position++; // Skip -
+                skipWhitespace();
+                return new UnaryExpression(parseUnary(), UnaryExpression.Operator.NEGATE);
+            }
+            if (c == '!') {
+                position++; // Skip !
+                skipWhitespace();
+                return new UnaryExpression(parseUnary(), UnaryExpression.Operator.NOT);
+            }
+        }
+        return parsePrimary();
+    }
+
+    private Expression parsePrimary() {
         skipWhitespace();
 
         if (position >= input.length()) {
@@ -41,12 +109,7 @@ public class Parser {
             return parseVariable();
         }
 
-        // Handle null literal
-        if (c == 'n') {
-            return parseNullLiteral();
-        }
-
-        // Handle function calls and boolean literals
+        // Handle function calls and various literals (null, true, false)
         if (Character.isLetter(c)) {
             int start = position;
             while (position < input.length()) {
@@ -72,9 +135,26 @@ public class Parser {
                 return new LiteralExpression(true);
             } else if (value.equals("false")) {
                 return new LiteralExpression(false);
+            } else if (value.equals("null")) {
+                return new LiteralExpression(null);
             }
 
             throw new SyntaxException("Invalid identifier: " + value);
+        }
+
+        // Handle parenthesized expressions
+        if (c == '(') {
+            position++; // Skip (
+            skipWhitespace();
+            Expression expr = parseExpression();
+            skipWhitespace();
+            
+            if (position >= input.length() || input.charAt(position) != ')') {
+                throw new SyntaxException("Expected ')' after expression");
+            }
+            position++; // Skip )
+            
+            return expr;
         }
 
         throw new SyntaxException("Unexpected character: " + c);
@@ -540,20 +620,6 @@ public class Parser {
         }
 
         throw new SyntaxException("Unterminated function call");
-    }
-
-    private Expression parseNullLiteral() {
-        int start = position;
-        while (position < input.length() && Character.isLetter(input.charAt(position))) {
-            position++;
-        }
-
-        String value = input.substring(start, position);
-        if (value.equals("null")) {
-            return new LiteralExpression(null);
-        }
-
-        throw new SyntaxException("Invalid literal: " + value);
     }
 
     private void skipWhitespace() {
