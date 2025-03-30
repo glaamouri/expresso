@@ -39,7 +39,15 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      image: 'img/expresso-social-card.jpg',
+      image: 'img/logo.svg',
+      metadata: [
+        { name: 'description', content: 'Expresso is a lightweight Java expression evaluator library.' },
+        { name: 'keywords', content: 'Java, Expression Evaluator, Expresso, Library' },
+        { name: 'og:title', content: 'Expresso - Java Expression Evaluator' },
+        { name: 'og:description', content: 'Expresso is a lightweight Java expression evaluator library.' },
+        { name: 'og:image', content: 'https://expresso.ghassen.work/img/logo.svg' },
+        { name: 'og:url', content: 'https://expresso.ghassen.work' },
+      ],
     
       navbar: {
         title: 'Expresso',
