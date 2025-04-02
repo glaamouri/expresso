@@ -27,28 +27,31 @@ public class UnaryExpression implements Expression {
         switch (operator) {
             case NEGATE:
                 if (value == null) {
-                    throw new EvaluationException("Cannot negate null value");
+                    return 0.0; // Negating null returns 0
                 }
-                
                 if (value instanceof Number) {
-                    double num = ((Number) value).doubleValue();
-                    return -num;
-                } else {
-                    throw new EvaluationException("Cannot negate non-numeric value: " + value.getClass().getSimpleName());
+                    return -((Number) value).doubleValue();
                 }
+                throw new IllegalArgumentException("Cannot negate non-numeric value: " + value);
             case NOT:
-                if (value == null) {
-                    // Treat null as false, so !null is true
-                    return true;
-                }
-                
-                if (value instanceof Boolean) {
-                    return !(Boolean) value;
-                } else {
-                    throw new EvaluationException("Cannot apply logical NOT to non-boolean value: " + value.getClass().getSimpleName());
-                }
+                return !isTruthy(value); // Convert to boolean and negate
             default:
-                throw new EvaluationException("Unknown unary operator");
+                throw new IllegalArgumentException("Unknown unary operator: " + operator);
         }
+    }
+
+    /**
+     * Determines if a value is truthy (true if not null and not false)
+     * @param value The value to check
+     * @return true if the value is truthy, false otherwise
+     */
+    private boolean isTruthy(Object value) {
+        if (value == null) {
+            return false;
+        }
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        return true; // Non-null, non-boolean values are considered truthy
     }
 } 

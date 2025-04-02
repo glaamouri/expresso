@@ -43,7 +43,7 @@ public class Parser {
     }
 
     private Expression parseLogicalAnd() {
-        Expression left = parseAdditive();
+        Expression left = parseEquality();
         skipWhitespace();
 
         while (position < input.length() - 1) {
@@ -51,8 +51,34 @@ public class Parser {
             if (input.charAt(position) == '&' && input.charAt(position + 1) == '&') {
                 position += 2; // Skip &&
                 skipWhitespace();
-                Expression right = parseAdditive();
+                Expression right = parseEquality();
                 left = new BinaryExpression(left, right, BinaryExpression.Operator.AND);
+                skipWhitespace();
+            } else {
+                break;
+            }
+        }
+
+        return left;
+    }
+
+    private Expression parseEquality() {
+        Expression left = parseAdditive();
+        skipWhitespace();
+
+        while (position < input.length() - 1) {
+            // Check for equality operators == and !=
+            if (input.charAt(position) == '=' && input.charAt(position + 1) == '=') {
+                position += 2; // Skip ==
+                skipWhitespace();
+                Expression right = parseAdditive();
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.EQUALS);
+                skipWhitespace();
+            } else if (input.charAt(position) == '!' && input.charAt(position + 1) == '=') {
+                position += 2; // Skip !=
+                skipWhitespace();
+                Expression right = parseAdditive();
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.NOT_EQUALS);
                 skipWhitespace();
             } else {
                 break;

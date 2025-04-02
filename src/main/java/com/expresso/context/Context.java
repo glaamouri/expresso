@@ -38,6 +38,16 @@ public class Context {
   }
 
   /**
+   * Checks if a variable exists in the context
+   *
+   * @param name The variable name
+   * @return true if the variable exists, false otherwise
+   */
+  public boolean variableExists(String name) {
+    return variables.containsKey(name);
+  }
+
+  /**
    * Registers a function in the context
    *
    * @param name The function name
@@ -222,9 +232,51 @@ public class Context {
         return str.replace(oldStr, newStr);
     });
     registerFunction("contains", args -> {
+        if (args[0] == null) return false;
+        if (args[0] instanceof String && args[1] instanceof String) {
+            return ((String) args[0]).contains((String) args[1]);
+        } else if (args[0] instanceof List) {
+            return ((List<?>) args[0]).contains(args[1]);
+        } else if (args[0].getClass().isArray()) {
+            int length = java.lang.reflect.Array.getLength(args[0]);
+            for (int i = 0; i < length; i++) {
+                Object element = java.lang.reflect.Array.get(args[0], i);
+                if (element == null && args[1] == null) return true;
+                if (element != null && element.equals(args[1])) return true;
+            }
+            return false;
+        }
+        return false;
+    });
+    registerFunction("startsWith", args -> {
+        String str = (String) args[0];
+        String prefix = (String) args[1];
+        return str.startsWith(prefix);
+    });
+    registerFunction("endsWith", args -> {
+        String str = (String) args[0];
+        String suffix = (String) args[1];
+        return str.endsWith(suffix);
+    });
+    registerFunction("split", args -> {
+        String str = (String) args[0];
+        String delimiter = (String) args[1];
+        return List.of(str.split(delimiter));
+    });
+    registerFunction("join", args -> {
+        String delimiter = (String) args[0];
+        List<?> elements = (List<?>) args[1];
+        return String.join(delimiter, elements.stream().map(Object::toString).toList());
+    });
+    registerFunction("charAt", args -> {
+        String str = (String) args[0];
+        int index = ((Number) args[1]).intValue();
+        return String.valueOf(str.charAt(index));
+    });
+    registerFunction("indexOf", args -> {
         String str = (String) args[0];
         String search = (String) args[1];
-        return str.contains(search);
+        return str.indexOf(search);
     });
 
     // Math functions
@@ -260,6 +312,12 @@ public class Context {
         return Math.sqrt(num);
     });
     registerFunction("random", args -> Math.random());
+    registerFunction("sin", args -> Math.sin(((Number) args[0]).doubleValue()));
+    registerFunction("cos", args -> Math.cos(((Number) args[0]).doubleValue()));
+    registerFunction("tan", args -> Math.tan(((Number) args[0]).doubleValue()));
+    registerFunction("log", args -> Math.log(((Number) args[0]).doubleValue()));
+    registerFunction("log10", args -> Math.log10(((Number) args[0]).doubleValue()));
+    registerFunction("exp", args -> Math.exp(((Number) args[0]).doubleValue()));
 
     // Logic functions
     registerFunction("isNull", args -> args[0] == null);
@@ -282,6 +340,86 @@ public class Context {
     registerFunction("isNumber", args -> args[0] instanceof Number);
     registerFunction("isString", args -> args[0] instanceof String);
     registerFunction("isBoolean", args -> args[0] instanceof Boolean);
+    registerFunction("isList", args -> args[0] instanceof List || (args[0] != null && args[0].getClass().isArray()));
+    registerFunction("isMap", args -> args[0] instanceof Map);
+    registerFunction("equals", args -> {
+        if (args[0] == null && args[1] == null) return true;
+        if (args[0] == null || args[1] == null) return false;
+        return args[0].equals(args[1]);
+    });
+    registerFunction("ifThen", args -> {
+        boolean condition = (Boolean) args[0];
+        return condition ? args[1] : args[2];
+    });
+    
+    // Comparison functions
+    registerFunction("greaterThan", args -> {
+        if (args[0] == null || args[1] == null) return false;
+        if (args[0] instanceof Number && args[1] instanceof Number) {
+            return ((Number) args[0]).doubleValue() > ((Number) args[1]).doubleValue();
+        }
+        if (args[0] instanceof String && args[1] instanceof String) {
+            return ((String) args[0]).compareTo((String) args[1]) > 0;
+        }
+        if (args[0] instanceof java.time.LocalDate && args[1] instanceof java.time.LocalDate) {
+            return ((java.time.LocalDate) args[0]).isAfter((java.time.LocalDate) args[1]);
+        }
+        throw new IllegalArgumentException("Cannot compare types: " + args[0].getClass() + " and " + args[1].getClass());
+    });
+    
+    registerFunction("lessThan", args -> {
+        if (args[0] == null || args[1] == null) return false;
+        if (args[0] instanceof Number && args[1] instanceof Number) {
+            return ((Number) args[0]).doubleValue() < ((Number) args[1]).doubleValue();
+        }
+        if (args[0] instanceof String && args[1] instanceof String) {
+            return ((String) args[0]).compareTo((String) args[1]) < 0;
+        }
+        if (args[0] instanceof java.time.LocalDate && args[1] instanceof java.time.LocalDate) {
+            return ((java.time.LocalDate) args[0]).isBefore((java.time.LocalDate) args[1]);
+        }
+        throw new IllegalArgumentException("Cannot compare types: " + args[0].getClass() + " and " + args[1].getClass());
+    });
+    
+    registerFunction("greaterThanOrEqual", args -> {
+        if (args[0] == null || args[1] == null) return false;
+        if (args[0] instanceof Number && args[1] instanceof Number) {
+            return ((Number) args[0]).doubleValue() >= ((Number) args[1]).doubleValue();
+        }
+        if (args[0] instanceof String && args[1] instanceof String) {
+            return ((String) args[0]).compareTo((String) args[1]) >= 0;
+        }
+        if (args[0] instanceof java.time.LocalDate && args[1] instanceof java.time.LocalDate) {
+            return !((java.time.LocalDate) args[0]).isBefore((java.time.LocalDate) args[1]);
+        }
+        throw new IllegalArgumentException("Cannot compare types: " + args[0].getClass() + " and " + args[1].getClass());
+    });
+    
+    registerFunction("lessThanOrEqual", args -> {
+        if (args[0] == null || args[1] == null) return false;
+        if (args[0] instanceof Number && args[1] instanceof Number) {
+            return ((Number) args[0]).doubleValue() <= ((Number) args[1]).doubleValue();
+        }
+        if (args[0] instanceof String && args[1] instanceof String) {
+            return ((String) args[0]).compareTo((String) args[1]) <= 0;
+        }
+        if (args[0] instanceof java.time.LocalDate && args[1] instanceof java.time.LocalDate) {
+            return !((java.time.LocalDate) args[0]).isAfter((java.time.LocalDate) args[1]);
+        }
+        throw new IllegalArgumentException("Cannot compare types: " + args[0].getClass() + " and " + args[1].getClass());
+    });
+    
+    registerFunction("strictEquals", args -> {
+        if (args[0] == null && args[1] == null) return true;
+        if (args[0] == null || args[1] == null) return false;
+        return args[0].equals(args[1]);
+    });
+    
+    registerFunction("notEquals", args -> {
+        if (args[0] == null && args[1] == null) return false;
+        if (args[0] == null || args[1] == null) return true;
+        return !args[0].equals(args[1]);
+    });
          
     // Date functions
     registerFunction("format", args -> {
@@ -310,6 +448,125 @@ public class Context {
         java.time.LocalDate date1 = (java.time.LocalDate) args[0];
         java.time.LocalDate date2 = (java.time.LocalDate) args[1];
         return java.time.temporal.ChronoUnit.DAYS.between(date1, date2);
+    });
+    
+    registerFunction("addMonths", args -> {
+        java.time.LocalDate date = (java.time.LocalDate) args[0];
+        int months = ((Number) args[1]).intValue();
+        return date.plusMonths(months);
+    });
+    
+    registerFunction("addYears", args -> {
+        java.time.LocalDate date = (java.time.LocalDate) args[0];
+        int years = ((Number) args[1]).intValue();
+        return date.plusYears(years);
+    });
+    
+    registerFunction("year", args -> ((java.time.LocalDate) args[0]).getYear());
+    registerFunction("month", args -> ((java.time.LocalDate) args[0]).getMonthValue());
+    registerFunction("dayOfMonth", args -> ((java.time.LocalDate) args[0]).getDayOfMonth());
+    
+    // Collection functions
+    registerFunction("size", args -> {
+        if (args[0] == null) return 0;
+        if (args[0] instanceof String) return ((String) args[0]).length();
+        if (args[0] instanceof List) return ((List<?>) args[0]).size();
+        if (args[0] instanceof Map) return ((Map<?, ?>) args[0]).size();
+        if (args[0].getClass().isArray()) return java.lang.reflect.Array.getLength(args[0]);
+        throw new IllegalArgumentException("Cannot get size of type: " + args[0].getClass());
+    });
+    
+    registerFunction("first", args -> {
+        if (args[0] == null) return null;
+        if (args[0] instanceof List && !((List<?>) args[0]).isEmpty()) {
+            return ((List<?>) args[0]).get(0);
+        }
+        if (args[0].getClass().isArray() && java.lang.reflect.Array.getLength(args[0]) > 0) {
+            return java.lang.reflect.Array.get(args[0], 0);
+        }
+        return null;
+    });
+    
+    registerFunction("last", args -> {
+        if (args[0] == null) return null;
+        if (args[0] instanceof List) {
+            List<?> list = (List<?>) args[0];
+            return list.isEmpty() ? null : list.get(list.size() - 1);
+        }
+        if (args[0].getClass().isArray()) {
+            int length = java.lang.reflect.Array.getLength(args[0]);
+            return length == 0 ? null : java.lang.reflect.Array.get(args[0], length - 1);
+        }
+        return null;
+    });
+    
+    registerFunction("subList", args -> {
+        if (args[0] == null) return List.of();
+        List<?> list;
+        if (args[0] instanceof List) {
+            list = (List<?>) args[0];
+        } else if (args[0].getClass().isArray()) {
+            int length = java.lang.reflect.Array.getLength(args[0]);
+            List<Object> result = new java.util.ArrayList<>(length);
+            for (int i = 0; i < length; i++) {
+                result.add(java.lang.reflect.Array.get(args[0], i));
+            }
+            list = result;
+        } else {
+            throw new IllegalArgumentException("Cannot get subList of type: " + args[0].getClass());
+        }
+        
+        int start = ((Number) args[1]).intValue();
+        int end = args.length > 2 ? ((Number) args[2]).intValue() : list.size();
+        start = Math.max(0, Math.min(start, list.size()));
+        end = Math.max(start, Math.min(end, list.size()));
+        return new java.util.ArrayList<>(list.subList(start, end));
+    });
+    
+    // Utility functions
+    registerFunction("typeof", args -> {
+        if (args[0] == null) return "null";
+        if (args[0] instanceof String) return "string";
+        if (args[0] instanceof Number) return "number";
+        if (args[0] instanceof Boolean) return "boolean";
+        if (args[0] instanceof List || args[0].getClass().isArray()) return "list";
+        if (args[0] instanceof Map) return "map";
+        if (args[0] instanceof java.time.LocalDate) return "date";
+        return args[0].getClass().getSimpleName().toLowerCase();
+    });
+    
+    registerFunction("toString", args -> args[0] == null ? "null" : args[0].toString());
+    
+    registerFunction("toNumber", args -> {
+        if (args[0] == null) return 0.0;
+        if (args[0] instanceof Number) return ((Number) args[0]).doubleValue();
+        if (args[0] instanceof String) {
+            try {
+                return Double.parseDouble((String) args[0]);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Cannot convert string to number: " + args[0]);
+            }
+        }
+        if (args[0] instanceof Boolean) return ((Boolean) args[0]) ? 1.0 : 0.0;
+        throw new IllegalArgumentException("Cannot convert to number: " + args[0]);
+    });
+    
+    registerFunction("toBoolean", args -> {
+        if (args[0] == null) return false;
+        if (args[0] instanceof Boolean) return args[0];
+        if (args[0] instanceof String) {
+            String str = ((String) args[0]).toLowerCase();
+            if ("true".equals(str) || "yes".equals(str) || "1".equals(str)) {
+                return true;
+            }
+            if ("false".equals(str) || "no".equals(str) || "0".equals(str)) {
+                return false;
+            }
+            // Non-specific strings are considered true if not empty
+            return !str.isEmpty();
+        }
+        if (args[0] instanceof Number) return ((Number) args[0]).doubleValue() != 0;
+        return true; // Non-null object is considered true
     });
   }
 }

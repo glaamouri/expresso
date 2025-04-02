@@ -35,11 +35,13 @@ public class VariableExpression implements Expression {
 
   @Override
   public Object evaluate(Context context) {
+    // Check if the variable exists in the context
+    boolean exists = context.variableExists(name);
     Object value = context.getVariable(name);
 
     // If there's no property path, handle the variable value directly
     if (propertyPath == null) {
-      if (value == null && !isNullSafe && !inSafeContext) {
+      if (value == null && !exists && !isNullSafe && !inSafeContext) {
         throw new PropertyNotFoundException("Variable not found: " + name);
       }
       return value;
@@ -47,13 +49,12 @@ public class VariableExpression implements Expression {
 
     // If there is a property path, resolve it with null-safe handling
     try {
-      if (value == null && !isNullSafe && !inSafeContext) {
+      if (value == null && !exists && !isNullSafe && !inSafeContext) {
         throw new PropertyNotFoundException("Variable not found: " + name);
       }
 
         return context.resolveProperty(value, propertyPath, isNullSafe);
     } catch (PropertyNotFoundException e) {
-
       if (isNullSafe || inSafeContext) {
         return null;
       }
