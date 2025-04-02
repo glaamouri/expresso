@@ -12,7 +12,9 @@ public class BinaryExpression implements Expression {
         SUBTRACT,
         MULTIPLY,
         DIVIDE,
-        MODULO
+        MODULO,
+        AND,
+        OR
     }
 
     private final Expression left;
@@ -28,8 +30,35 @@ public class BinaryExpression implements Expression {
     @Override
     public Object evaluate(Context context) {
         Object leftValue = left.evaluate(context);
+        
+        // Special handling for logical operators
+        if (operator == Operator.AND || operator == Operator.OR) {
+            // For AND: If left is null or false, return false (short-circuit)
+            if (operator == Operator.AND) {
+                boolean leftBool = isTruthy(leftValue);
+                if (!leftBool) {
+                    return false;
+                }
+            }
+            
+            // For OR: If left is truthy (not null and not false), return true (short-circuit)
+            if (operator == Operator.OR) {
+                boolean leftBool = isTruthy(leftValue);
+                if (leftBool) {
+                    return true;
+                }
+            }
+            
+            // Evaluate right side
+            Object rightValue = right.evaluate(context);
+            boolean rightBool = isTruthy(rightValue);
+            
+            return operator == Operator.AND ? (isTruthy(leftValue) && rightBool) : (isTruthy(leftValue) || rightBool);
+        }
+        
+        // For non-logical operators, proceed as before
         Object rightValue = right.evaluate(context);
-
+        
         if (leftValue == null || rightValue == null) {
             throw new EvaluationException("Cannot perform operation on null value");
         }
@@ -64,5 +93,24 @@ public class BinaryExpression implements Expression {
         } else {
             throw new EvaluationException("Incompatible types for operation: " + leftValue.getClass().getSimpleName() + " and " + rightValue.getClass().getSimpleName());
         }
+    }
+    
+    /**
+     * Determines if a value should be considered "truthy" in a boolean context.
+     * - null is falsy
+     * - Boolean false is falsy
+     * - Boolean true is truthy
+     * - For other types, we throw an exception as they're not valid in logical expressions
+     */
+    private boolean isTruthy(Object value) {
+        if (value == null) {
+            return false;
+        }
+        
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        
+        throw new EvaluationException("Logical operators require boolean operands or null values");
     }
 } 

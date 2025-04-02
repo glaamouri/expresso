@@ -19,7 +19,47 @@ public class Parser {
     }
 
     private Expression parseExpression() {
-        return parseAdditive();
+        return parseLogicalOr();
+    }
+
+    private Expression parseLogicalOr() {
+        Expression left = parseLogicalAnd();
+        skipWhitespace();
+
+        while (position < input.length() - 1) {
+            // Check for OR operator ||
+            if (input.charAt(position) == '|' && input.charAt(position + 1) == '|') {
+                position += 2; // Skip ||
+                skipWhitespace();
+                Expression right = parseLogicalAnd();
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.OR);
+                skipWhitespace();
+            } else {
+                break;
+            }
+        }
+
+        return left;
+    }
+
+    private Expression parseLogicalAnd() {
+        Expression left = parseAdditive();
+        skipWhitespace();
+
+        while (position < input.length() - 1) {
+            // Check for AND operator &&
+            if (input.charAt(position) == '&' && input.charAt(position + 1) == '&') {
+                position += 2; // Skip &&
+                skipWhitespace();
+                Expression right = parseAdditive();
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.AND);
+                skipWhitespace();
+            } else {
+                break;
+            }
+        }
+
+        return left;
     }
 
     private Expression parseAdditive() {

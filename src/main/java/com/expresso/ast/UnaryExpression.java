@@ -24,12 +24,12 @@ public class UnaryExpression implements Expression {
     public Object evaluate(Context context) {
         Object value = operand.evaluate(context);
 
-        if (value == null) {
-            throw new EvaluationException("Cannot perform unary operation on null value");
-        }
-
         switch (operator) {
             case NEGATE:
+                if (value == null) {
+                    throw new EvaluationException("Cannot negate null value");
+                }
+                
                 if (value instanceof Number) {
                     double num = ((Number) value).doubleValue();
                     return -num;
@@ -37,6 +37,11 @@ public class UnaryExpression implements Expression {
                     throw new EvaluationException("Cannot negate non-numeric value: " + value.getClass().getSimpleName());
                 }
             case NOT:
+                if (value == null) {
+                    // Treat null as false, so !null is true
+                    return true;
+                }
+                
                 if (value instanceof Boolean) {
                     return !(Boolean) value;
                 } else {
