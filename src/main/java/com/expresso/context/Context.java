@@ -17,6 +17,31 @@ public class Context {
     this.functions = new HashMap<>();
     registerBuiltInFunctions();
   }
+  
+  /**
+   * Creates a new Context with a single variable
+   * 
+   * @param name The variable name
+   * @param value The variable value
+   * @return A new Context with the specified variable
+   */
+  public static Context of(String name, Object value) {
+    Context context = new Context();
+    context.setVariable(name, value);
+    return context;
+  }
+  
+  /**
+   * Creates a new Context with variables from a map
+   * 
+   * @param variables Map of variable names to values
+   * @return A new Context with the specified variables
+   */
+  public static Context of(Map<String, Object> variables) {
+    Context context = new Context();
+    variables.forEach(context::setVariable);
+    return context;
+  }
 
   /**
    * Sets a variable in the context
@@ -26,6 +51,29 @@ public class Context {
    */
   public void setVariable(String name, Object value) {
     variables.put(name, value);
+  }
+  
+  /**
+   * Sets a variable in the context with a fluent interface
+   * 
+   * @param name The variable name
+   * @param value The variable value
+   * @return This context for method chaining
+   */
+  public Context with(String name, Object value) {
+    variables.put(name, value);
+    return this;
+  }
+  
+  /**
+   * Sets multiple variables from a map with a fluent interface
+   * 
+   * @param variables Map of variable names to values
+   * @return This context for method chaining
+   */
+  public Context withAll(Map<String, Object> variables) {
+    variables.forEach(this::setVariable);
+    return this;
   }
 
   /**
