@@ -1,24 +1,21 @@
-package com.expresso.context;
+package com.expresso.context.fluent;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.expresso.context.Context;
 import java.util.Map;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class ContextTest {
+/**
+ * Tests for the fluent API in the Context class - focusing on creation and variable management.
+ */
+@DisplayName("Fluent Context Creation")
+class FluentContextCreationTest {
 
     @Test
-    void testTraditionalContextCreation() {
-        Context context = new Context();
-        context.setVariable("name", "Alice");
-        context.setVariable("age", 25);
-        
-        assertEquals("Alice", context.getVariable("name"));
-        assertEquals(25, context.getVariable("age"));
-    }
-    
-    @Test
-    void testFluentContextCreation() {
+    @DisplayName("Create context with fluent 'with' method chaining")
+    void createWithFluentMethods() {
         Context context = new Context()
             .with("name", "Alice")
             .with("age", 25)
@@ -30,7 +27,8 @@ class ContextTest {
     }
     
     @Test
-    void testStaticFactoryMethod() {
+    @DisplayName("Create context with static 'of' factory method for single variable")
+    void createWithStaticFactoryMethod() {
         Context context = Context.of("name", "Alice");
         
         assertEquals("Alice", context.getVariable("name"));
@@ -39,7 +37,8 @@ class ContextTest {
     }
     
     @Test
-    void testFactoryMethodWithMap() {
+    @DisplayName("Create context with 'of' factory method for multiple variables")
+    void createWithStaticFactoryMethodForMultipleVariables() {
         Map<String, Object> variables = Map.of(
             "name", "Bob",
             "age", 30,
@@ -54,7 +53,8 @@ class ContextTest {
     }
     
     @Test
-    void testWithAllMethod() {
+    @DisplayName("Add multiple variables with 'withAll' method")
+    void addMultipleVariablesWithWithAllMethod() {
         Context context = new Context()
             .with("name", "Alice")
             .withAll(Map.of("age", 25, "city", "London"));
@@ -65,7 +65,8 @@ class ContextTest {
     }
     
     @Test
-    void testChainedMethodsOverwrite() {
+    @DisplayName("Variable overwriting with chained methods")
+    void variableOverwritingWithChainedMethods() {
         Context context = new Context()
             .with("name", "Alice")
             .with("age", 25)
@@ -73,5 +74,19 @@ class ContextTest {
         
         assertEquals("Bob", context.getVariable("name"));
         assertEquals(25, context.getVariable("age"));
+    }
+    
+    @Test
+    @DisplayName("Combine traditional and fluent API methods")
+    void combineTraditionalAndFluentMethods() {
+        Context context = new Context();
+        context.setVariable("name", "Alice");
+        
+        context.with("age", 25)
+               .with("city", "London");
+        
+        assertEquals("Alice", context.getVariable("name"));
+        assertEquals(25, context.getVariable("age"));
+        assertEquals("London", context.getVariable("city"));
     }
 } 

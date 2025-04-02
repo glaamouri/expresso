@@ -43,8 +43,9 @@ public class BinaryExpression implements Expression {
             if (!isTruthy(leftValue)) {
                 return false;
             }
-            // Otherwise, return the truthiness of the right expression
-            return isTruthy(right.evaluate(context));
+            // Otherwise, evaluate right and check truthiness
+            Object rightValue = right.evaluate(context);
+            return isTruthy(rightValue);
         }
         
         if (operator == Operator.OR) {
@@ -52,8 +53,9 @@ public class BinaryExpression implements Expression {
             if (isTruthy(leftValue)) {
                 return true;
             }
-            // Otherwise, return the truthiness of the right expression
-            return isTruthy(right.evaluate(context));
+            // Otherwise, evaluate right and check truthiness
+            Object rightValue = right.evaluate(context);
+            return isTruthy(rightValue);
         }
         
         // For non-short-circuit operators, evaluate both sides
@@ -104,6 +106,10 @@ public class BinaryExpression implements Expression {
                 if (leftValue == null || rightValue == null) {
                     return false;
                 }
+                // Special handling for numeric comparisons
+                if (leftValue instanceof Number && rightValue instanceof Number) {
+                    return Double.compare(((Number) leftValue).doubleValue(), ((Number) rightValue).doubleValue()) == 0;
+                }
                 return leftValue.equals(rightValue);
             case NOT_EQUALS:
                 if (leftValue == null && rightValue == null) {
@@ -112,15 +118,31 @@ public class BinaryExpression implements Expression {
                 if (leftValue == null || rightValue == null) {
                     return true;
                 }
+                // Special handling for numeric comparisons
+                if (leftValue instanceof Number && rightValue instanceof Number) {
+                    return Double.compare(((Number) leftValue).doubleValue(), ((Number) rightValue).doubleValue()) != 0;
+                }
                 return !leftValue.equals(rightValue);
             case GREATER_THAN:
-                return compareValues(leftValue, rightValue) > 0;
+                if (leftValue == null || rightValue == null) {
+                    return false; // Null values cannot be compared
+                }
+                return compareValues(leftValue, rightValue) > 0 ? true : false;
             case LESS_THAN:
-                return compareValues(leftValue, rightValue) < 0;
+                if (leftValue == null || rightValue == null) {
+                    return false; // Null values cannot be compared
+                }
+                return compareValues(leftValue, rightValue) < 0 ? true : false;
             case GREATER_THAN_OR_EQUAL:
-                return compareValues(leftValue, rightValue) >= 0;
+                if (leftValue == null || rightValue == null) {
+                    return false; // Null values cannot be compared
+                }
+                return compareValues(leftValue, rightValue) >= 0 ? true : false;
             case LESS_THAN_OR_EQUAL:
-                return compareValues(leftValue, rightValue) <= 0;
+                if (leftValue == null || rightValue == null) {
+                    return false; // Null values cannot be compared
+                }
+                return compareValues(leftValue, rightValue) <= 0 ? true : false;
         }
         
         throw new IllegalArgumentException("Unsupported operation: " + operator + " for types: " 
@@ -151,11 +173,6 @@ public class BinaryExpression implements Expression {
      */
     @SuppressWarnings("unchecked")
     private int compareValues(Object left, Object right) {
-        // Handle null cases for comparisons
-        if (left == null || right == null) {
-            return 0; // Null values are not comparable, so always return false
-        }
-        
         if (left instanceof Number && right instanceof Number) {
             double leftDouble = ((Number) left).doubleValue();
             double rightDouble = ((Number) right).doubleValue();
