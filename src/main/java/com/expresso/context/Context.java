@@ -1,6 +1,8 @@
 package com.expresso.context;
 
 import com.expresso.context.functions.FunctionRegistry;
+import com.expresso.exception.ArrayIndexOutOfBoundsException;
+import com.expresso.exception.PropertyAccessException;
 import com.expresso.exception.PropertyNotFoundException;
 import java.util.HashMap;
 import java.util.List;
@@ -128,12 +130,12 @@ public class Context {
 
     if (target == null) {
       if (isNullSafe) {
-
         return null;
       }
       throw new PropertyNotFoundException("Cannot access property on null value");
     }
 
+    // Handle array access notation
     // Check for null-safe array access
     if (property.contains("?[") && property.endsWith("]")) {
       int bracketIndex = property.indexOf("?[");
@@ -146,7 +148,6 @@ public class Context {
           arrayProperty.isEmpty() ? target : resolveProperty(target, arrayProperty, isNullSafe);
 
       if (array == null) {
-
         return null; // Null-safe access, return null instead of throwing
       }
 
@@ -155,7 +156,6 @@ public class Context {
         List<?> list = (List<?>) array;
 
         if (index < 0 || index >= list.size()) {
-
           return null; // Null-safe access, return null instead of throwing
         }
         return list.get(index);
@@ -182,7 +182,6 @@ public class Context {
 
       if (array == null) {
         if (isNullSafe) {
-
           return null;
         }
         throw new PropertyNotFoundException("Cannot access array on null value");
@@ -194,10 +193,9 @@ public class Context {
 
         if (index < 0 || index >= list.size()) {
           if (isNullSafe) {
-
             return null;
           }
-          throw new PropertyNotFoundException("Array index out of bounds: " + index);
+          throw new ArrayIndexOutOfBoundsException(list, index, list.size());
         }
         return list.get(index);
       } else if (array.getClass().isArray()) {
@@ -206,15 +204,14 @@ public class Context {
           if (isNullSafe) {
             return null;
           }
-          throw new PropertyNotFoundException("Array index out of bounds: " + index);
+          throw new ArrayIndexOutOfBoundsException(array, index, length);
         }
         return java.lang.reflect.Array.get(array, index);
       } else {
         if (isNullSafe) {
           return null;
         }
-        throw new PropertyNotFoundException(
-            "Cannot access index on non-array/list type: " + array.getClass());
+        throw new PropertyAccessException(array, property, "Cannot access index on non-array/list type");
       }
     }
 
@@ -243,7 +240,7 @@ public class Context {
           if (isNullSafe) {
             return null;
           }
-          throw new PropertyNotFoundException("Property not found: " + part, e);
+          throw new PropertyAccessException(current, part, "Property not found", e);
         }
       }
     }

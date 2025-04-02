@@ -1,7 +1,8 @@
 package com.expresso.ast;
 
 import com.expresso.context.Context;
-import com.expresso.exception.EvaluationException;
+import com.expresso.exception.ArithmeticExpressionException;
+import com.expresso.exception.InvalidOperationException;
 
 /**
  * AST node for binary expressions (e.g., a + b, a * b)
@@ -68,37 +69,37 @@ public class BinaryExpression implements Expression {
                 } else if (leftValue instanceof Number && rightValue instanceof Number) {
                     return ((Number) leftValue).doubleValue() + ((Number) rightValue).doubleValue();
                 }
-                break;
+                throw new InvalidOperationException("+", leftValue, rightValue, "Cannot add these types");
             case SUBTRACT:
                 if (leftValue instanceof Number && rightValue instanceof Number) {
                     return ((Number) leftValue).doubleValue() - ((Number) rightValue).doubleValue();
                 }
-                break;
+                throw new InvalidOperationException("-", leftValue, rightValue, "Cannot subtract non-numeric values");
             case MULTIPLY:
                 if (leftValue instanceof Number && rightValue instanceof Number) {
                     return ((Number) leftValue).doubleValue() * ((Number) rightValue).doubleValue();
                 }
-                break;
+                throw new InvalidOperationException("*", leftValue, rightValue, "Cannot multiply non-numeric values");
             case DIVIDE:
                 if (leftValue instanceof Number && rightValue instanceof Number) {
                     double leftNum = ((Number) leftValue).doubleValue();
                     double rightNum = ((Number) rightValue).doubleValue();
                     if (rightNum == 0) {
-                        throw new IllegalArgumentException("Division by zero");
+                        throw ArithmeticExpressionException.divisionByZero(leftValue, rightValue);
                     }
                     return leftNum / rightNum;
                 }
-                break;
+                throw new InvalidOperationException("/", leftValue, rightValue, "Cannot divide non-numeric values");
             case MODULO:
                 if (leftValue instanceof Number && rightValue instanceof Number) {
                     double leftNum = ((Number) leftValue).doubleValue();
                     double rightNum = ((Number) rightValue).doubleValue();
                     if (rightNum == 0) {
-                        throw new IllegalArgumentException("Modulo by zero");
+                        throw ArithmeticExpressionException.moduloByZero(leftValue, rightValue);
                     }
                     return leftNum % rightNum;
                 }
-                break;
+                throw new InvalidOperationException("%", leftValue, rightValue, "Cannot perform modulo with non-numeric values");
             case EQUALS:
                 if (leftValue == null && rightValue == null) {
                     return true;
@@ -143,11 +144,9 @@ public class BinaryExpression implements Expression {
                     return false; // Null values cannot be compared
                 }
                 return compareValues(leftValue, rightValue) <= 0 ? true : false;
+            default:
+                throw new InvalidOperationException(operator.toString(), leftValue, rightValue, "Unsupported operation");
         }
-        
-        throw new IllegalArgumentException("Unsupported operation: " + operator + " for types: " 
-            + (leftValue != null ? leftValue.getClass().getSimpleName() : "null") + " and " 
-            + (rightValue != null ? rightValue.getClass().getSimpleName() : "null"));
     }
     
     /**
@@ -187,6 +186,6 @@ public class BinaryExpression implements Expression {
             return ((Comparable<Object>) left).compareTo(right);
         }
         
-        throw new IllegalArgumentException("Cannot compare types: " + left.getClass() + " and " + right.getClass());
+        throw new InvalidOperationException("compare", left, right, "Cannot compare these types");
     }
 } 

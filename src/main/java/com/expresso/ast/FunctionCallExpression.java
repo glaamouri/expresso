@@ -1,7 +1,8 @@
 package com.expresso.ast;
 
 import com.expresso.context.Context;
-import com.expresso.exception.EvaluationException;
+import com.expresso.exception.FunctionExecutionException;
+import com.expresso.exception.UnknownFunctionException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -59,18 +60,27 @@ public class FunctionCallExpression implements Expression {
 
         Function<Object[], Object> function = context.getFunction(name);
         if (function == null) {
-            throw new EvaluationException("Function not found: " + name);
+            throw new UnknownFunctionException(name);
         }
 
-        List<Object> evaluatedArgs = new ArrayList<>();
-        for (Expression arg : arguments) {
-            evaluatedArgs.add(arg.evaluate(context));
+        // Evaluate arguments
+        Object[] args = new Object[arguments.size()];
+        for (int i = 0; i < arguments.size(); i++) {
+            args[i] = arguments.get(i).evaluate(context);
         }
 
         try {
-            return function.apply(evaluatedArgs.toArray());
+            return function.apply(args);
         } catch (Exception e) {
-            throw new EvaluationException("Error calling function " + name + ": " + e.getMessage(), e);
+            throw new FunctionExecutionException(name, e.getMessage(), e);
         }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Expression> getArguments() {
+        return arguments;
     }
 } 

@@ -10,13 +10,22 @@ Expresso provides robust error handling mechanisms to help you manage errors in 
 
 ## Exception Hierarchy
 
-Expresso uses a structured exception hierarchy to provide clear and informative error messages. The library includes these primary exception types:
+Expresso uses a comprehensive exception hierarchy to provide clear and informative error messages. All exceptions extend from the base `ExpressionException` class.
 
 ```
-RuntimeException
-├── SyntaxException              // For parsing and syntax errors
-├── EvaluationException          // For errors during expression evaluation
-└── PropertyNotFoundException     // For property access errors
+ExpressionException
+├── SyntaxException                // For parsing and syntax errors
+├── EvaluationException            // For errors during expression evaluation
+│   ├── FunctionExecutionException // For errors in function execution
+│   │   └── MissingArgumentException // When function arguments are missing
+│   ├── TypeConversionException    // For type conversion errors
+│   ├── InvalidOperationException  // For invalid operations between operands
+│   │   └── ArithmeticExpressionException // For arithmetic errors like division by zero
+│   └── UnknownFunctionException   // When a referenced function doesn't exist
+└── PropertyNotFoundException      // For property access errors
+    ├── VariableNotFoundException  // When a variable doesn't exist
+    ├── PropertyAccessException    // When a property exists but can't be accessed
+    └── ArrayIndexOutOfBoundsException // When an array index is out of bounds
 ```
 
 Understanding this hierarchy helps you catch specific types of errors and handle them appropriately.
@@ -30,7 +39,7 @@ try {
     evaluator.evaluate("5 + ", context);
 } catch (SyntaxException e) {
     System.err.println("Syntax error: " + e.getMessage());
-    // e.g. "Unexpected end of input, expected expression"
+    // e.g. "Unexpected end of expression"
 }
 ```
 
@@ -42,83 +51,105 @@ Common syntax errors include:
 
 ## Evaluation Errors
 
-The `EvaluationException` is thrown when errors occur during the evaluation of a syntactically valid expression:
+The `EvaluationException` is the base class for all errors that occur during expression evaluation.
+
+### Function Execution Errors
+
+- **FunctionExecutionException**: Thrown when an error occurs within a function call
+- **MissingArgumentException**: Thrown when a function is called with fewer arguments than expected
+- **UnknownFunctionException**: Thrown when referencing a function that doesn't exist
 
 ```java
+try {
+    evaluator.evaluate("pow(2)", context); // Missing second argument
+} catch (MissingArgumentException e) {
+    System.err.println("Missing argument: " + e.getMessage());
+    System.err.println("Function: " + e.getFunctionName());
+    System.err.println("Expected: " + e.getExpectedCount() + " arguments");
+    System.err.println("Actual: " + e.getActualCount() + " arguments");
+}
+
 try {
     evaluator.evaluate("unknownFunction()", context);
-} catch (EvaluationException e) {
-    System.err.println("Evaluation error: " + e.getMessage());
-    // e.g. "Function not found: unknownFunction"
+} catch (UnknownFunctionException e) {
+    System.err.println("Unknown function: " + e.getFunctionName());
+}
+
+try {
+    evaluator.evaluate("upperCase(42)", context); // Passing a number to a string function
+} catch (FunctionExecutionException e) {
+    System.err.println("Function error: " + e.getMessage());
+    System.err.println("Function name: " + e.getFunctionName());
 }
 ```
 
-Common evaluation errors include:
-- Referencing undefined functions
-- Passing incorrect number of arguments to functions
-- Type mismatches in operations
-- Division by zero and other arithmetic errors
+### Type Conversion Errors
 
-### Function Errors
-
-Function-related errors are a common type of evaluation error:
+The `TypeConversionException` is thrown when a value cannot be converted to the expected type.
 
 ```java
 try {
-    evaluator.evaluate("upperCase()", context); // Missing argument
-} catch (EvaluationException e) {
-    System.err.println("Function error: " + e.getMessage());
-}
-
-try {
-    evaluator.evaluate("upperCase(42)", context); // Wrong type of argument
-} catch (EvaluationException e) {
-    System.err.println("Type error: " + e.getMessage());
+    evaluator.evaluate("sqrt('hello')", context); // Cannot convert string to number
+} catch (TypeConversionException e) {
+    System.err.println("Type conversion error: " + e.getMessage());
+    System.err.println("Source value: " + e.getSourceValue());
+    System.err.println("Target type: " + e.getTargetType());
 }
 ```
 
-### Type Errors and Invalid Operations
+### Operation Errors
 
-The library also throws appropriate exceptions for type errors and invalid operations:
+- **InvalidOperationException**: Thrown when an operation is invalid between two operands
+- **ArithmeticExpressionException**: Specifically for arithmetic errors like division by zero
 
 ```java
 try {
     evaluator.evaluate("'hello' * 5", context); // Cannot multiply string by number
-} catch (EvaluationException e) {
+} catch (InvalidOperationException e) {
     System.err.println("Invalid operation: " + e.getMessage());
+    System.err.println("Operation: " + e.getOperation());
+    System.err.println("Left operand: " + e.getLeftOperand());
+    System.err.println("Right operand: " + e.getRightOperand());
 }
 
 try {
     evaluator.evaluate("5 / 0", context); // Division by zero
-} catch (EvaluationException e) {
+} catch (ArithmeticExpressionException e) {
     System.err.println("Arithmetic error: " + e.getMessage());
+    // e.g. "Invalid operation '/' between 5 and 0: Division by zero"
 }
 ```
 
 ## Property Access Errors
 
-The `PropertyNotFoundException` is thrown when errors occur during property access:
+The `PropertyNotFoundException` is the base class for errors related to accessing properties that don't exist.
+
+- **VariableNotFoundException**: Thrown when referencing a variable that doesn't exist in the context
+- **PropertyAccessException**: Thrown when a property exists but cannot be accessed
+- **ArrayIndexOutOfBoundsException**: Thrown when an array or list index is out of bounds
 
 ```java
 try {
     evaluator.evaluate("$nonExistentVar", context);
-} catch (PropertyNotFoundException e) {
-    System.err.println("Variable not found: " + e.getMessage());
-    // e.g. "Variable not found: nonExistentVar"
+} catch (VariableNotFoundException e) {
+    System.err.println("Variable not found: " + e.getVariableName());
 }
 
 try {
     evaluator.evaluate("$person.address.city", context); // When address is null
-} catch (PropertyNotFoundException e) {
+} catch (PropertyAccessException e) {
     System.err.println("Property access error: " + e.getMessage());
-    // e.g. "Cannot access property on null value"
+    System.err.println("Target object: " + e.getTarget());
+    System.err.println("Property name: " + e.getProperty());
 }
 
 try {
     evaluator.evaluate("$scores[5]", context); // When scores has fewer than 6 elements
-} catch (PropertyNotFoundException e) {
+} catch (ArrayIndexOutOfBoundsException e) {
     System.err.println("Array index error: " + e.getMessage());
-    // e.g. "Array index out of bounds: 5"
+    System.err.println("Array: " + e.getArray());
+    System.err.println("Index: " + e.getIndex());
+    System.err.println("Size: " + e.getSize());
 }
 ```
 
@@ -265,25 +296,45 @@ try {
     evaluator.evaluate(expression, context);
 } catch (SyntaxException e) {
     // Handle syntax errors
+} catch (MissingArgumentException e) {
+    // Handle missing arguments in functions
+} catch (UnknownFunctionException e) {
+    // Handle unknown functions
+} catch (FunctionExecutionException e) {
+    // Handle other function execution errors
+} catch (TypeConversionException e) {
+    // Handle type conversion errors
+} catch (ArithmeticExpressionException e) {
+    // Handle arithmetic errors
+} catch (InvalidOperationException e) {
+    // Handle other operation errors
+} catch (ArrayIndexOutOfBoundsException e) {
+    // Handle array index errors
+} catch (VariableNotFoundException e) {
+    // Handle variable not found errors
+} catch (PropertyAccessException e) {
+    // Handle property access errors
 } catch (PropertyNotFoundException e) {
-    // Handle property not found errors
+    // Handle other property errors
 } catch (EvaluationException e) {
     // Handle other evaluation errors
+} catch (ExpressionException e) {
+    // Handle any other expression errors
 } catch (Exception e) {
     // Handle unexpected errors
 }
 ```
 
-2. **Use Null-Safe Operators**: When accessing properties that might be null, use the null-safe operators (`?.`, `?[]`) to avoid exceptions.
+2. **Use Exception Properties**: Many exceptions provide additional information through methods like `getFunctionName()`, `getVariableName()`, etc.
 
-3. **Provide Default Values**: Use the null coalescing operator (`??`) to provide default values for potentially null results.
+3. **User-Friendly Error Messages**: Translate exceptions into user-friendly error messages that explain how to fix the issue.
 
-4. **Validate Expressions**: For critical code paths, validate expressions before evaluating them to prevent runtime errors.
+4. **Default Values**: Consider using null-safe operators (`?.`, `?[]`) and null coalescing (`??`) to handle potential errors gracefully.
 
-5. **Custom Error Messages**: Provide clear error messages when catching exceptions to help with debugging.
+5. **Validate Expressions**: For critical code paths, validate expressions before evaluating them to prevent runtime errors.
 
-6. **Defensive Programming**: Use defensive functions like `isNull()`, `isEmpty()`, and `coalesce()` to handle edge cases.
+6. **Properly Type-Check**: Ensure proper type checking in custom functions to avoid type conversion errors.
 
-7. **Test with Edge Cases**: Test your expressions with edge cases like null values, empty collections, and invalid inputs to ensure they handle errors gracefully.
+7. **Use Defensive Functions**: Leverage built-in functions like `isNull()`, `isEmpty()`, and `coalesce()` to handle edge cases.
 
 Using these techniques, you can create expressions that gracefully handle errors and provide a better user experience. 
