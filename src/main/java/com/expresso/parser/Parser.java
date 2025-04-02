@@ -19,7 +19,32 @@ public class Parser {
     }
 
     private Expression parseExpression() {
-        return parseLogicalOr();
+        return parseConditional();
+    }
+
+    private Expression parseConditional() {
+        Expression condition = parseLogicalOr();
+        skipWhitespace();
+        
+        if (position < input.length() && input.charAt(position) == '?') {
+            position++; // Skip ?
+            skipWhitespace();
+            
+            Expression trueExpr = parseLogicalOr(); // Parse the 'then' part
+            skipWhitespace();
+            
+            if (position >= input.length() || input.charAt(position) != ':') {
+                throw new SyntaxException("Expected ':' in conditional expression");
+            }
+            
+            position++; // Skip :
+            skipWhitespace();
+            
+            Expression falseExpr = parseLogicalOr(); // Parse the 'else' part
+            return new ConditionalExpression(condition, trueExpr, falseExpr);
+        }
+        
+        return condition;
     }
 
     private Expression parseLogicalOr() {

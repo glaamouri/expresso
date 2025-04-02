@@ -37,7 +37,16 @@ public class LogicFunctions implements FunctionProvider {
             return args[0].equals(args[1]);
         });
         context.registerFunction("ifThen", args -> {
-            boolean condition = (Boolean) args[0];
+            // Handle null condition gracefully, treating it as false
+            boolean condition = false;
+            if (args[0] != null) {
+                if (args[0] instanceof Boolean) {
+                    condition = (Boolean) args[0];
+                } else {
+                    // Non-null, non-boolean values are considered true
+                    condition = true;
+                }
+            }
             return condition ? args[1] : args[2];
         });
     }

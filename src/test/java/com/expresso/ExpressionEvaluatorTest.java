@@ -1066,6 +1066,152 @@ class ExpressionEvaluatorTest {
         assertEquals(false, evaluator.evaluate("contains($numberArray, 10)", context));
     }
 
+    @Test
+    void testConditionalExpression() {
+        Context context = new Context();
+        context.setVariable("age", 15);
+        context.setVariable("price", 100.0);
+        context.setVariable("isStudent", true);
+        
+        // Use function-based conditional that we know works
+        assertEquals("Minor", evaluator.evaluate("ifThen(greaterThanOrEqual($age, 18), 'Adult', 'Minor')", context));
+        
+        // Compound conditions
+        assertEquals("Teen", evaluator.evaluate("ifThen(lessThan($age, 13), 'Child', ifThen(lessThan($age, 18), 'Teen', 'Adult'))", context));
+        
+        // Mathematical expressions in branches
+        assertEquals(80.0, evaluator.evaluate("ifThen($isStudent, $price * 0.8, $price * 0.95)", context));
+        
+        // Change variable and test again
+        context.setVariable("age", 30);
+        assertEquals("Adult", evaluator.evaluate("ifThen(greaterThanOrEqual($age, 18), 'Adult', 'Minor')", context));
+        
+        // Test with null condition (should evaluate to false)
+        context.setVariable("nullVar", null);
+        assertEquals("Fallback", evaluator.evaluate("ifThen($nullVar, 'Primary', 'Fallback')", context));
+    }
+
+    @Test
+    void testExtendedDateFunctions() {
+        Context context = new Context();
+        
+        // Test current date/time functions
+        Object currentDate = evaluator.evaluate("currentDate()", context);
+        assertTrue(currentDate instanceof java.time.LocalDate);
+        assertEquals(java.time.LocalDate.now(), currentDate);
+        
+        Object currentTime = evaluator.evaluate("currentTime()", context);
+        assertTrue(currentTime instanceof java.time.LocalTime);
+        
+        Object currentDateTime = evaluator.evaluate("currentDateTime()", context);
+        assertTrue(currentDateTime instanceof java.time.LocalDateTime);
+        
+        // Test parseDate with default pattern
+        assertEquals(java.time.LocalDate.of(2023, 5, 15), 
+            evaluator.evaluate("parseDate('2023-05-15')", context));
+        
+        // Test parseDate with custom pattern
+        assertEquals(java.time.LocalDate.of(2023, 5, 15), 
+            evaluator.evaluate("parseDate('15/05/2023', 'dd/MM/yyyy')", context));
+        
+        // Test parseDateTime
+        java.time.LocalDateTime expectedDateTime = java.time.LocalDateTime.of(2023, 5, 15, 14, 30, 0);
+        assertEquals(expectedDateTime, 
+            evaluator.evaluate("parseDateTime('2023-05-15T14:30:00')", context));
+        
+        // Test date comparisons
+        assertEquals(true, evaluator.evaluate("isDateBefore(parseDate('2023-01-01'), parseDate('2023-02-01'))", context));
+        assertEquals(false, evaluator.evaluate("isDateBefore(parseDate('2023-03-01'), parseDate('2023-02-01'))", context));
+        
+        assertEquals(true, evaluator.evaluate("isDateAfter(parseDate('2023-02-01'), parseDate('2023-01-01'))", context));
+        assertEquals(false, evaluator.evaluate("isDateAfter(parseDate('2023-01-01'), parseDate('2023-02-01'))", context));
+        
+        // Test days between
+        assertEquals(31L, evaluator.evaluate("daysBetween(parseDate('2023-01-01'), parseDate('2023-02-01'))", context));
+        assertEquals(-31L, evaluator.evaluate("daysBetween(parseDate('2023-02-01'), parseDate('2023-01-01'))", context));
+        
+        // Test formatDate
+        java.time.LocalDate testDate = java.time.LocalDate.of(2023, 5, 15);
+        context.setVariable("date", testDate);
+        assertEquals("May 15, 2023", evaluator.evaluate("formatDate($date, 'MMMM dd, yyyy')", context));
+        
+        // Test getters
+        assertEquals(2023, evaluator.evaluate("getYear($date)", context));
+        assertEquals(5, evaluator.evaluate("getMonth($date)", context));
+        assertEquals(15, evaluator.evaluate("getDayOfMonth($date)", context));
+    }
+    
+    @Test
+    void testObjectBuilder() {
+        Context context = new Context();
+        
+        // Test simple object
+        Map<String, Object> person = com.expresso.util.ObjectBuilder.create()
+            .set("name", "Alice")
+            .set("age", 30)
+            .set("isStudent", false)
+            .build();
+        
+        context.setVariable("person", person);
+        assertEquals("Alice", evaluator.evaluate("$person.name", context));
+        assertEquals(30, evaluator.evaluate("$person.age", context));
+        assertEquals(false, evaluator.evaluate("$person.isStudent", context));
+        
+        // Test complex nested object
+        Map<String, Object> user = com.expresso.util.ObjectBuilder.create()
+            .set("id", 1001)
+            .set("name", "John Doe")
+            .object("address")
+                .set("street", "123 Main St")
+                .set("city", "New York")
+                .set("state", "NY")
+                .set("zip", 10001)
+                .end()
+            .list("hobbies")
+                .add("reading")
+                .add("gaming")
+                .add("hiking")
+                .end()
+            .object("account")
+                .set("id", "ACC-1001")
+                .set("active", true)
+                .list("transactions")
+                    .addObject()
+                        .set("id", "TRX-001")
+                        .set("amount", 150.75)
+                        .set("date", java.time.LocalDate.of(2023, 5, 10))
+                        .end()
+                    .addObject()
+                        .set("id", "TRX-002")
+                        .set("amount", 50.25)
+                        .set("date", java.time.LocalDate.of(2023, 5, 15))
+                        .end()
+                    .end()
+                .end()
+            .build();
+        
+        context.setVariable("user", user);
+        
+        // Test property access in complex object
+        assertEquals("John Doe", evaluator.evaluate("$user.name", context));
+        assertEquals("New York", evaluator.evaluate("$user.address.city", context));
+        assertEquals("reading", evaluator.evaluate("$user.hobbies[0]", context));
+        assertEquals(true, evaluator.evaluate("$user.account.active", context));
+        
+        // Directly verify the transaction structure
+        Map<String, Object> account = (Map<String, Object>) user.get("account");
+        List<Map<String, Object>> transactions = (List<Map<String, Object>>) account.get("transactions");
+        assertEquals("TRX-001", transactions.get(0).get("id"));
+        assertEquals(50.25, transactions.get(1).get("amount"));
+        
+        // Test with conditional expression
+        assertEquals("Active", evaluator.evaluate("$user.account.active ? 'Active' : 'Inactive'", context));
+        
+        // Test with functions
+        assertEquals(3, evaluator.evaluate("size($user.hobbies)", context));
+        assertEquals(2, evaluator.evaluate("size($user.account.transactions)", context));
+    }
+
     public static class Person {
         private final String name;
         private final int age;
