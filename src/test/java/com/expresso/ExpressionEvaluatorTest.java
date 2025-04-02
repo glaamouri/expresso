@@ -17,6 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class ExpressionEvaluatorTest {
     private final ExpressionEvaluator evaluator = new ExpressionEvaluator();
@@ -912,6 +914,12 @@ class ExpressionEvaluatorTest {
     void testCollectionFunctions() {
         Context context = new Context();
         
+        // Add debug function
+        evaluator.registerFunction("debug", args -> {
+            System.out.println("Debug: " + args[0]);
+            return args[0];
+        });
+        
         // Setup test collections
         List<Integer> numbers = List.of(1, 2, 3, 4, 5);
         context.setVariable("numbers", numbers);
@@ -930,10 +938,132 @@ class ExpressionEvaluatorTest {
         assertEquals(2, evaluator.evaluate("size($person)", context));
         assertEquals(5, evaluator.evaluate("size('hello')", context));
         assertEquals(0, evaluator.evaluate("size('')", context));
+        assertEquals(0, evaluator.evaluate("size(null)", context));
         
         // Test first and last functions
         assertEquals(1, evaluator.evaluate("first($numbers)", context));
         assertEquals(5, evaluator.evaluate("last($numbers)", context));
+        assertEquals("apple", evaluator.evaluate("first($fruits)", context));
+        assertEquals("cherry", evaluator.evaluate("last($fruits)", context));
+        assertNull(evaluator.evaluate("first(null)", context));
+        assertNull(evaluator.evaluate("last(null)", context));
+        
+        // Test empty list
+        List<String> emptyList = List.of();
+        context.setVariable("emptyList", emptyList);
+        assertNull(evaluator.evaluate("first($emptyList)", context));
+        assertNull(evaluator.evaluate("last($emptyList)", context));
+        
+        // Test subList function
+        List<Integer> expectedSubList = List.of(2, 3, 4);
+        assertEquals(expectedSubList, evaluator.evaluate("subList($numbers, 1, 4)", context));
+        
+        List<Integer> expectedSubListToEnd = List.of(3, 4, 5);
+        assertEquals(expectedSubListToEnd, evaluator.evaluate("subList($numbers, 2)", context));
+        
+        // Test subList with empty list
+        assertEquals(List.of(), evaluator.evaluate("subList($emptyList, 0, 1)", context));
+        
+        // Test subList with null
+        assertEquals(List.of(), evaluator.evaluate("subList(null, 0, 1)", context));
+        
+        // Test subList with bounds checking
+        List<Integer> boundedSubList = List.of(1, 2, 3, 4, 5);
+        assertEquals(boundedSubList, evaluator.evaluate("subList($numbers, -1, 10)", context)); // Should clamp to valid bounds
+        
+        // Test contains function with lists
+        System.out.println("Testing contains with lists:");
+        System.out.println("Numbers list: " + numbers);
+        System.out.println("Contains $numbers, 3: " + evaluator.evaluate("debug(contains($numbers, 3))", context));
+        assertTrue((Boolean) evaluator.evaluate("contains($numbers, 3)", context));
+        assertFalse((Boolean) evaluator.evaluate("contains($numbers, 10)", context));
+            
+        System.out.println("Fruits list: " + fruits);
+        System.out.println("Contains $fruits, 'banana': " + evaluator.evaluate("debug(contains($fruits, 'banana'))", context));
+        assertTrue((Boolean) evaluator.evaluate("contains($fruits, 'banana')", context));
+        assertFalse((Boolean) evaluator.evaluate("contains($fruits, 'orange')", context));
+        
+        // Test contains function with strings
+        System.out.println("Testing contains with strings:");
+        assertTrue((Boolean) evaluator.evaluate("contains('banana', 'ana')", context));
+        assertFalse((Boolean) evaluator.evaluate("contains('banana', 'orange')", context));
+        
+        // Test contains function with null values
+        System.out.println("Testing contains with null values:");
+        assertFalse((Boolean) evaluator.evaluate("contains(null, 'anything')", context));
+        assertFalse((Boolean) evaluator.evaluate("contains($fruits, null)", context));
+        
+        // Test contains with List variables
+        System.out.println("Testing contains with List variables:");
+        List<String> stringList = List.of("apple", "banana", "cherry");
+        context.setVariable("stringList", stringList);
+        System.out.println("StringList: " + stringList);
+        assertTrue((Boolean) evaluator.evaluate("contains($stringList, 'banana')", context));
+        assertFalse((Boolean) evaluator.evaluate("contains($stringList, 'orange')", context));
+
+        // Test with arrays
+        System.out.println("Testing contains with arrays:");
+        String[] fruitArray = new String[] {"apple", "banana", "cherry"};
+        context.setVariable("fruitArray", fruitArray);
+        System.out.println("FruitArray: " + Arrays.toString(fruitArray));
+        assertTrue((Boolean) evaluator.evaluate("contains($fruitArray, 'banana')", context));
+        assertFalse((Boolean) evaluator.evaluate("contains($fruitArray, 'orange')", context));
+
+        // Test with Integer arrays
+        Integer[] numberArray = new Integer[] {1, 2, 3, 4, 5};
+        context.setVariable("numberArray", numberArray);
+        System.out.println("NumberArray: " + Arrays.toString(numberArray));
+        assertTrue((Boolean) evaluator.evaluate("contains($numberArray, 3)", context));
+        assertFalse((Boolean) evaluator.evaluate("contains($numberArray, 10)", context));
+    }
+
+    @Test
+    void testContainsFunction() {
+        Context context = new Context();
+        
+        // Test with string contains
+        assertEquals(true, evaluator.evaluate("contains('banana', 'ana')", context));
+        assertEquals(false, evaluator.evaluate("contains('banana', 'orange')", context));
+        
+        // Test with list contains
+        List<String> fruits = List.of("apple", "banana", "cherry");
+        context.setVariable("fruits", fruits);
+        assertEquals(true, evaluator.evaluate("contains($fruits, 'banana')", context));
+        assertEquals(false, evaluator.evaluate("contains($fruits, 'orange')", context));
+        
+        // Add debug custom function to print values
+        evaluator.registerFunction("debug", args -> {
+            System.out.println("Debug: " + args[0]);
+            return args[0];
+        });
+        
+        // Test with String array
+        String[] fruitArray = new String[] {"apple", "banana", "cherry"};
+        context.setVariable("fruitArray", fruitArray);
+        
+        // Debug the array value
+        System.out.println("Array class: " + fruitArray.getClass().getName());
+        System.out.println("Array contents: " + Arrays.toString(fruitArray));
+        
+        Object result = evaluator.evaluate("debug(contains($fruitArray, 'banana'))", context);
+        System.out.println("Contains result: " + result);
+        
+        assertEquals(true, evaluator.evaluate("contains($fruitArray, 'banana')", context));
+        assertEquals(false, evaluator.evaluate("contains($fruitArray, 'orange')", context));
+
+        // Test with Integer array
+        Integer[] numberArray = new Integer[] {1, 2, 3, 4, 5};
+        context.setVariable("numberArray", numberArray);
+        
+        // Debug the array value
+        System.out.println("Number Array class: " + numberArray.getClass().getName());
+        System.out.println("Number Array contents: " + Arrays.toString(numberArray));
+        
+        Object numberResult = evaluator.evaluate("debug(contains($numberArray, 3))", context);
+        System.out.println("Contains number result: " + numberResult);
+        
+        assertEquals(true, evaluator.evaluate("contains($numberArray, 3)", context));
+        assertEquals(false, evaluator.evaluate("contains($numberArray, 10)", context));
     }
 
     public static class Person {
