@@ -66,6 +66,27 @@ The null-safe array access operator:
 - Returns null if the index is out of bounds
 - Can be combined with property access (`$person?.hobbies?[0]?.name`)
 
+## Current Limitations with Complex Property Paths
+
+There are some limitations with the current implementation of property access on array elements:
+
+```java
+// Accessing properties on array elements may not work as expected in complex paths
+$company.departments[0].name  // This may throw a PropertyNotFoundException
+
+// Instead, use separate expressions or variables:
+// 1. First, get the department
+$dept = $company.departments[0]
+// 2. Then access its properties
+$dept.name
+```
+
+When working with complex property paths that include both array access and subsequent property access, you might encounter issues with the property path parser. As a workaround:
+
+1. Use separate expressions to retrieve array elements first
+2. Then access properties on the retrieved elements
+3. Alternatively, consider using the null-safe versions of operators even if you believe the values won't be null
+
 ## Null Coalescing Operator (`??`)
 
 The null coalescing operator allows you to provide a default value when an expression evaluates to null:
@@ -82,6 +103,32 @@ The null coalescing operator:
 - Returns the left expression's value if it's not null
 - Returns the right expression's value if the left expression is null
 
+## Null Handling in Logical Operations
+
+Expresso treats null values as falsy in logical operations, making it easy to write clean conditional expressions:
+
+```java
+// Null values are treated as false in logical operations
+$nullVariable && $trueValue       // => false
+$nullVariable || $trueValue       // => true
+$nullVariable || $falseValue      // => false
+!$nullVariable                    // => true
+
+// This works with properties too
+$person?.address?.isValid && $otherCondition
+$person?.manager?.isActive || $fallbackCondition
+
+// And with null-safe property access
+$data?.user?.profile?.isActive ?? false
+```
+
+Expresso follows these "truthiness" rules:
+- `null` is falsy (equivalent to `false` in logical operations)
+- `Boolean` values behave as expected (`true` is truthy, `false` is falsy)
+- All other non-null values are truthy
+
+This allows for concise expressions that gracefully handle null values without throwing exceptions.
+
 ## Combined Usage
 
 These operators are particularly powerful when combined:
@@ -90,7 +137,19 @@ These operators are particularly powerful when combined:
 // Combining null-safe property access, array access, and null coalescing
 $person?.address?.city ?? 'Unknown City'
 $person?.hobbies?[0] ?? 'No Hobby'
-$orders?[0]?.items?[0]?.productName ?? 'No Product'
+
+// For complex paths with array access, use intermediary steps:
+// Instead of this (which might not work reliably):
+// $orders?[0]?.items?[0]?.productName ?? 'No Product'
+
+// Do this:
+$firstOrder = $orders?[0]
+$firstItem = $firstOrder?.items?[0]
+$productName = $firstItem?.productName ?? 'No Product'
+
+// Combining with logical operations
+$user?.profile?.isVerified && $user?.subscription?.isActive
+$product?.inStock || $product?.backorderAvailable
 ```
 
 ## Benefits
@@ -139,11 +198,26 @@ String firstHobby = (String) evaluator.evaluate("$person?.hobbies?[0] ?? 'Unknow
 ### Chained Operations
 
 ```java
-// Complex expression with chained null-safe access and default value
-String result = (String) evaluator.evaluate(
-    "$user?.orders?[0]?.items?[0]?.product?.name ?? 'No Product'", 
-    context
-);
+// For complex expressions with array access, break them into steps
+// Instead of:
+// String result = evaluator.evaluate("$user?.orders?[0]?.items?[0]?.product?.name ?? 'No Product'", context);
+
+// Do this:
+context.setVariable("firstOrder", evaluator.evaluate("$user?.orders?[0]", context));
+context.setVariable("firstItem", evaluator.evaluate("$firstOrder?.items?[0]", context));
+String result = (String) evaluator.evaluate("$firstItem?.product?.name ?? 'No Product'", context);
 ```
 
-This expression will return the product name if the entire chain is non-null, otherwise it returns 'No Product'. 
+### Logical Operations with Null
+
+```java
+// Using null in logical operations
+context.setVariable("user", null);
+context.setVariable("hasAccess", true);
+
+// Returns true because null || true => true
+Boolean result1 = (Boolean) evaluator.evaluate("$user?.isAdmin || $hasAccess", context);
+
+// Returns false because null && true => false
+Boolean result2 = (Boolean) evaluator.evaluate("$user?.isActive && $hasAccess", context);
+``` 

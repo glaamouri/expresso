@@ -178,4 +178,39 @@ Map<String, Object> boolVars = Map.of(
 );
 Boolean boolResult = evaluator.evaluate(boolExpr, boolVars);
 // Result: true
-``` 
+```
+
+## Fluent Context API
+
+Expresso provides a fluent API for creating and populating the evaluation context:
+
+```java
+// Traditional approach
+Context context = new Context();
+context.setVariable("name", "Alice");
+context.setVariable("age", 25);
+
+// Fluent approach with method chaining
+Context context = new Context()
+    .with("name", "Alice")
+    .with("age", 25)
+    .with("isStudent", true);
+
+// Using static factory methods
+Context context = Context.of("name", "Alice");
+
+// Using a map of variables
+Map<String, Object> variables = Map.of(
+    "name", "Bob",
+    "age", 30,
+    "city", "New York"
+);
+Context context = Context.of(variables);
+
+// Adding multiple variables from a map
+Context context = new Context()
+    .with("name", "Alice")
+    .withAll(Map.of("age", 25, "city", "London"));
+```
+
+This fluent API makes your code more concise and readable when setting up evaluation contexts. 
