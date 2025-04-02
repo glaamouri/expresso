@@ -1,426 +1,448 @@
 ---
 id: examples
 title: Examples
-sidebar_position: 6
+sidebar_position: 7
 ---
 
 # Examples
 
-This page contains various examples to help you understand how to use Expresso in different scenarios.
+This page provides various examples to help you understand how to use Expresso in different scenarios.
 
 ## Basic Examples
 
+### Simple Arithmetic
+
 ```java
-// Simple string concatenation
-String expr = "$name + ' ' + $surname";
-Map<String, Object> vars = Map.of(
-    "name", "John",
-    "surname", "Doe"
-);
-// Result: "John Doe"
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
+Context context = new Context();
 
-// Mathematical operations
-String mathExpr = "$x * ($y + 5)";
-Map<String, Object> mathVars = Map.of(
-    "x", 10,
-    "y", 3
-);
-// Result: 80
+context.setVariable("x", 10);
+context.setVariable("y", 5);
 
-// Boolean expressions
-String boolExpr = "$age >= 18 && $score > 80";
-Map<String, Object> boolVars = Map.of(
-    "age", 20,
-    "score", 85
-);
-// Result: true
+// Basic arithmetic operations
+Double sum = (Double) evaluator.evaluate("$x + $y", context); // 15.0
+Double diff = (Double) evaluator.evaluate("$x - $y", context); // 5.0
+Double product = (Double) evaluator.evaluate("$x * $y", context); // 50.0
+Double quotient = (Double) evaluator.evaluate("$x / $y", context); // 2.0
+Double modulus = (Double) evaluator.evaluate("$x % $y", context); // 0.0
+```
+
+### String Operations
+
+```java
+Context context = new Context();
+context.setVariable("firstName", "John");
+context.setVariable("lastName", "Doe");
+
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
+
+// String concatenation
+String fullName = (String) evaluator.evaluate("$firstName + ' ' + $lastName", context); // "John Doe"
+
+// String functions
+String upper = (String) evaluator.evaluate("upperCase($firstName)", context); // "JOHN"
+String lower = (String) evaluator.evaluate("lowerCase($lastName)", context); // "doe"
+Integer length = (Integer) evaluator.evaluate("length($firstName)", context); // 4
+```
+
+### Boolean Logic
+
+```java
+Context context = new Context();
+context.setVariable("a", true);
+context.setVariable("b", false);
+
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
+
+// Logical operations
+Boolean and = (Boolean) evaluator.evaluate("$a && $b", context); // false
+Boolean or = (Boolean) evaluator.evaluate("$a || $b", context); // true
+Boolean not = (Boolean) evaluator.evaluate("!$a", context); // false
+
+// Comparison with conditions
+Object result = evaluator.evaluate("$a ? 'Yes' : 'No'", context); // "Yes"
 ```
 
 ## Object Examples
 
+### Accessing Object Properties
+
 ```java
-// Access object properties
-String propExpr = "$person.name + ' ' + $person.address.city";
-Map<String, Object> objVars = Map.of(
-    "person", Map.of(
-        "name", "John",
-        "address", Map.of("city", "New York")
-    )
-);
-// Result: "John New York"
+// Create a Person object
+Person person = new Person("John Doe", 30);
+person.setAddress(new Address("123 Main St", "New York", "10001"));
 
-// Work with collections
-String listExpr = "$scores[0] + $scores[1]";
-Map<String, Object> listVars = Map.of(
-    "scores", List.of(85, 92, 78)
-);
-// Result: 177
+// Add to context
+Context context = new Context();
+context.setVariable("person", person);
 
-// Access properties on array elements (limitations apply)
-// The following might not work reliably for complex property paths:
-// "$company.departments[0].name"
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
 
-// Instead, break complex property paths with array access into steps:
-// Step 1: Get the array element
+// Access properties
+String name = (String) evaluator.evaluate("$person.name", context); // "John Doe"
+Integer age = (Integer) evaluator.evaluate("$person.age", context); // 30
+String city = (String) evaluator.evaluate("$person.address.city", context); // "New York"
+```
+
+### Working with Maps
+
+```java
+// Create a map
+Map<String, Object> user = new HashMap<>();
+user.put("name", "Alice");
+user.put("email", "alice@example.com");
+user.put("active", true);
+
+// Create a nested map
+Map<String, Object> settings = new HashMap<>();
+settings.put("theme", "dark");
+settings.put("notifications", true);
+user.put("settings", settings);
+
+// Add to context
+Context context = new Context();
+context.setVariable("user", user);
+
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
+
+// Access map values
+String name = (String) evaluator.evaluate("$user.name", context); // "Alice"
+Boolean active = (Boolean) evaluator.evaluate("$user.active", context); // true
+String theme = (String) evaluator.evaluate("$user.settings.theme", context); // "dark"
+```
+
+### Working with Lists and Arrays
+
+```java
+// Create a list
+List<String> fruits = Arrays.asList("apple", "banana", "cherry", "date");
+
+// Create an array
+Integer[] numbers = {1, 2, 3, 4, 5};
+
+// Add to context
+Context context = new Context();
+context.setVariable("fruits", fruits);
+context.setVariable("numbers", numbers);
+
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
+
+// Access list elements
+String secondFruit = (String) evaluator.evaluate("$fruits[1]", context); // "banana"
+Integer thirdNumber = (Integer) evaluator.evaluate("$numbers[2]", context); // 3
+
+// Use contains function
+Boolean hasBanana = (Boolean) evaluator.evaluate("contains($fruits, 'banana')", context); // true
+Boolean hasNumber3 = (Boolean) evaluator.evaluate("contains($numbers, 3)", context); // true
+```
+
+## Complex Property Path Examples
+
+### Working with Deeply Nested Structures
+
+When working with complex, deeply nested data structures, it's best to break down the path into manageable steps:
+
+```java
+// Create a company with departments and employees
+Map<String, Object> company = new HashMap<>();
+company.put("name", "Acme Corp");
+
+List<Map<String, Object>> departments = new ArrayList<>();
+
+Map<String, Object> department1 = new HashMap<>();
+department1.put("name", "Engineering");
+department1.put("headcount", 50);
+
+List<Map<String, Object>> employees = new ArrayList<>();
+Map<String, Object> employee1 = new HashMap<>();
+employee1.put("name", "Alice Smith");
+employee1.put("position", "Lead Developer");
+employees.add(employee1);
+
+department1.put("employees", employees);
+departments.add(department1);
+company.put("departments", departments);
+
+// Add to context
+Context context = new Context();
+context.setVariable("company", company);
+
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
+
+// Break down complex paths into steps
+// Step 1: Access the company departments list
+Object departmentsList = evaluator.evaluate("$company.departments", context);
+assertNotNull(departmentsList);
+assertTrue(departmentsList instanceof List);
+
+// Step 2: Access the first department
 Object firstDept = evaluator.evaluate("$company.departments[0]", context);
-context.setVariable("firstDept", firstDept);
+assertNotNull(firstDept);
+context.setVariable("dept", firstDept);  // Store in a variable
 
-// Step 2: Access properties on the element
-String deptName = (String) evaluator.evaluate("$firstDept.name", context);
-// Result: "Engineering"
+// Step 3: Access the department properties using the stored variable
+assertEquals("Engineering", evaluator.evaluate("$dept.name", context));
+assertEquals(50, evaluator.evaluate("$dept.headcount", context));
 
-// For nested arrays, continue the pattern:
-// Instead of: "$company.departments[0].employees[0].name" 
-// Do this:
+// Step 4: Access the employees list
+Object employeesList = evaluator.evaluate("$dept.employees", context);
+assertNotNull(employeesList);
+assertTrue(employeesList instanceof List);
+
+// Step 5: Access the first employee
+Object firstEmployee = evaluator.evaluate("$dept.employees[0]", context);
+assertNotNull(firstEmployee);
+context.setVariable("employee", firstEmployee);  // Store in a variable
+
+// Step 6: Access the employee properties
+assertEquals("Alice Smith", evaluator.evaluate("$employee.name", context));
+assertEquals("Lead Developer", evaluator.evaluate("$employee.position", context));
+```
+
+### Using Temporary Variables for Complex Paths
+
+Another approach is to store intermediate results as variables in the context:
+
+```java
+// Starting with the same company structure as above
+Context context = new Context();
+context.setVariable("company", company);
+
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
+
+// Store the first department as a variable
 Object dept = evaluator.evaluate("$company.departments[0]", context);
-context.setVariable("dept", dept);
-Object employee = evaluator.evaluate("$dept.employees[0]", context);
-context.setVariable("employee", employee);
-String name = (String) evaluator.evaluate("$employee.name", context);
+context.setVariable("engineering", dept);
+
+// Now use this variable to access properties more easily
+String deptName = (String) evaluator.evaluate("$engineering.name", context); // "Engineering"
+Integer headcount = (Integer) evaluator.evaluate("$engineering.headcount", context); // 50
+
+// Access employees through the department variable
+Object employee = evaluator.evaluate("$engineering.employees[0]", context);
+context.setVariable("leadDeveloper", employee);
+
+// Use the employee variable
+String employeeName = (String) evaluator.evaluate("$leadDeveloper.name", context); // "Alice Smith"
+```
+
+### Testing Complex Paths
+
+When testing expressions with complex property paths, always verify the structure:
+
+```java
+// Verify each step of the path exists
+boolean hasCompany = (boolean) evaluator.evaluate("$company != null", context);
+boolean hasDepartments = hasCompany && (boolean) evaluator.evaluate("$company.departments != null", context);
+boolean hasFirstDept = hasDepartments && (boolean) evaluator.evaluate("$company.departments.size() > 0", context);
+
+// Only proceed if the structure is valid
+if (hasFirstDept) {
+    // Store intermediate results to simplify access
+    Object dept = evaluator.evaluate("$company.departments[0]", context);
+    context.setVariable("dept", dept);
+    
+    // Now safely access department properties
+    String deptName = (String) evaluator.evaluate("$dept.name", context);
+    System.out.println("Department name: " + deptName);
+}
 ```
 
 ## Null Safety Examples
 
-Expresso provides robust null handling with null-safe operators:
+### Handling Null Values
 
 ```java
-// Person with null address
-Person personWithNullAddress = new Person("Alice", 25, null, Arrays.asList("reading"));
-context.setVariable("person", personWithNullAddress);
+Person person = new Person("John Doe", 30);
+// Address is null
 
-// Unsafe property access (throws PropertyNotFoundException)
+Context context = new Context();
+context.setVariable("person", person);
+
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
+
+// This would throw PropertyNotFoundException
 try {
     evaluator.evaluate("$person.address.city", context);
 } catch (PropertyNotFoundException e) {
-    // Will throw exception: "Property 'address' not found on object of type Person"
+    System.out.println("Error: " + e.getMessage());
 }
 
-// Safe property access with null-safe operator
-Object result = evaluator.evaluate("$person?.address?.city", context);
-// Result: null (instead of throwing exception)
+// Using null-safe operator
+Object city = evaluator.evaluate("$person?.address?.city", context); // Returns null, no exception
 
 // Using null coalescing for default values
-String city = (String) evaluator.evaluate("$person?.address?.city ?? 'Unknown'", context);
-// Result: "Unknown"
+String cityWithDefault = (String) evaluator.evaluate("$person?.address?.city ?? 'Unknown'", context); // "Unknown"
+```
 
-// Person with valid address
-Person personWithAddress = new Person("Bob", 30, 
-    new Address("Paris", "France", 75000), 
-    Arrays.asList("gaming"));
-context.setVariable("person", personWithAddress);
+### Null-Safe Array Access
 
-// Null-safe property access returns actual value when not null
-String city = (String) evaluator.evaluate("$person?.address?.city ?? 'Unknown'", context);
-// Result: "Paris"
+```java
+Person person = new Person("John Doe", 30);
+// Hobbies list is null
 
-// Null-safe array access
-Person personWithNullHobbies = new Person("Charlie", 35, 
-    new Address("London", "UK", 10000), 
-    null);
-context.setVariable("person", personWithNullHobbies);
+Context context = new Context();
+context.setVariable("person", person);
 
-// Regular array access would throw an exception
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
+
+// This would throw PropertyNotFoundException
 try {
     evaluator.evaluate("$person.hobbies[0]", context);
 } catch (PropertyNotFoundException e) {
-    // Will throw exception: "Property 'hobbies' is null or not an array"
+    System.out.println("Error: " + e.getMessage());
 }
 
-// Null-safe array access with null coalescing
-String hobby = (String) evaluator.evaluate("$person?.hobbies?[0] ?? 'Unknown'", context);
-// Result: "Unknown"
+// Using null-safe array access
+Object hobby = evaluator.evaluate("$person?.hobbies?[0]", context); // Returns null, no exception
 
-// Person with valid hobbies
-Person personWithHobbies = new Person("Dave", 40, 
-    new Address("Berlin", "Germany", 10115), 
-    Arrays.asList("cooking", "hiking"));
-context.setVariable("person", personWithHobbies);
-
-// Null-safe array access on existing array
-String hobby = (String) evaluator.evaluate("$person?.hobbies?[0]", context);
-// Result: "cooking"
-
-// Out-of-bounds index with null coalescing
-String hobby = (String) evaluator.evaluate("$person?.hobbies?[10] ?? 'No hobby'", context);
-// Result: "No hobby" (index 10 doesn't exist)
+// Using null coalescing for default values
+String hobbyWithDefault = (String) evaluator.evaluate("$person?.hobbies?[0] ?? 'No hobby'", context); // "No hobby"
 ```
 
 ## Function Examples
 
-```java
-// String functions
-String strExpr = "upperCase(substring($name, 0, 3))";
-Map<String, Object> strVars = Map.of(
-    "name", "John Doe"
-);
-// Result: "JOH"
-
-// Math functions
-String mathFuncExpr = "round($pi, 2) + abs($negative)";
-Map<String, Object> mathFuncVars = Map.of(
-    "pi", 3.14159,
-    "negative", -42
-);
-// Result: 45.14
-
-// Date functions
-String dateExpr = "format($date, 'yyyy-MM-dd')";
-Map<String, Object> dateVars = Map.of(
-    "date", LocalDate.now()
-);
-// Result: "2024-03-29"
-```
-
-## Advanced Examples
-
-```java
-// Conditional expressions
-String condExpr = "$score >= 90 ? 'A' : ($score >= 80 ? 'B' : 'C')";
-Map<String, Object> condVars = Map.of(
-    "score", 85
-);
-// Result: "B"
-
-// Complex calculations
-String calcExpr = "round(sqrt(pow($x, 2) + pow($y, 2)), 2)";
-Map<String, Object> calcVars = Map.of(
-    "x", 3,
-    "y", 4
-);
-// Result: 5.0
-
-// Custom functions
-evaluator.registerFunction("calculate", (args) -> {
-    double x = ((Number) args[0]).doubleValue();
-    double y = ((Number) args[1]).doubleValue();
-    return x * y + 10;
-});
-
-String customExpr = "calculate($x, $y)";
-Map<String, Object> customVars = Map.of(
-    "x", 5,
-    "y", 3
-);
-// Result: 25
-```
-
-## Advanced Functions Usage
-
 ### String Functions
 
 ```java
-// Splitting and joining text
-// First get the tokens:
-// context.setVariable("tokens", evaluator.evaluate("split('red,green,blue', ',')", context));
-// Then use them in another expression:
-join("-", $tokens)                        // Returns: "red-green-blue"
+Context context = new Context();
+context.setVariable("text", "Hello, World!");
 
-// Working with string positions
-charAt("Hello", 0)                        // Returns: "H"
-indexOf("Hello World", "World")           // Returns: 6
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
 
-// String predicates
-startsWith("Hello World", "Hello")        // Returns: true
-endsWith("Hello World", "World")          // Returns: true
+String upper = (String) evaluator.evaluate("upperCase($text)", context); // "HELLO, WORLD!"
+String lower = (String) evaluator.evaluate("lowerCase($text)", context); // "hello, world!"
+String substring = (String) evaluator.evaluate("substring($text, 0, 5)", context); // "Hello"
+Boolean contains = (Boolean) evaluator.evaluate("contains($text, 'World')", context); // true
+Integer length = (Integer) evaluator.evaluate("length($text)", context); // 13
 ```
 
 ### Math Functions
 
 ```java
-// Trigonometric functions
-sin(0)                                    // Returns: 0.0
-cos(0)                                    // Returns: 1.0
-tan(0)                                    // Returns: 0.0
+Context context = new Context();
+context.setVariable("value", 16);
+context.setVariable("negValue", -10);
 
-// Logarithmic and exponential functions
-log(10)                                   // Returns: 2.302585092994046
-log10(100)                                // Returns: 2.0
-exp(1)                                    // Returns: 2.718281828459045
-```
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
 
-### Logic Functions
-
-```java
-// Type checking
-// isList([1, 2, 3])  - Unsupported syntax
-// isMap({"key": "value"})  - Unsupported syntax
-
-// Instead, use variables like this:
-// Context setup (not shown in usage)
-// context.setVariable("myList", List.of(1, 2, 3));
-// context.setVariable("myMap", Map.of("key", "value"));
-
-// Then in expressions:
-isList($myList)                          // Returns: true
-isMap($myMap)                            // Returns: true
-
-// Equality and conditionals
-equals("test", "test")                    // Returns: true
-equals(null, null)                        // Returns: true
-
-// Conditional expression (like ternary operator)
-// Note: Comparison operators like >, <, >= are not directly supported in expressions
-// Instead, compute the condition beforehand and store it in a variable:
-// context.setVariable("isAdult", age >= 18);
-ifThen($isAdult, "adult", "minor")        // Returns: "adult" if $isAdult is true
-ifThen(true, "greater", "less")           // Returns: "greater"
-ifThen(false, "greater", "less")          // Returns: "less"
+Double sqrt = (Double) evaluator.evaluate("sqrt($value)", context); // 4.0
+Double abs = (Double) evaluator.evaluate("abs($negValue)", context); // 10.0
+Double pow = (Double) evaluator.evaluate("pow($value, 0.5)", context); // 4.0
+Double max = (Double) evaluator.evaluate("max(5, 10)", context); // 10.0
+Double min = (Double) evaluator.evaluate("min(5, 10)", context); // 5.0
 ```
 
 ### Date Functions
 
 ```java
-// Get components from a date
-// First parse the date:
-// context.setVariable("date", evaluator.evaluate("parseDate('2023-05-15', 'yyyy-MM-dd')", context));
-// Then use it in expressions:
-year($date)                               // Returns: 2023
-month($date)                              // Returns: 5
-dayOfMonth($date)                         // Returns: 15
+Context context = new Context();
+context.setVariable("now", new Date());
+context.setVariable("date1", new SimpleDateFormat("yyyy-MM-dd").parse("2023-01-01"));
+context.setVariable("date2", new SimpleDateFormat("yyyy-MM-dd").parse("2023-12-31"));
 
-// Date manipulations
-addMonths($date, 3)                       // Returns: 2023-08-15
-addYears($date, 1)                        // Returns: 2024-05-15
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
+
+Boolean before = (Boolean) evaluator.evaluate("dateBefore($date1, $date2)", context); // true
+Boolean after = (Boolean) evaluator.evaluate("dateAfter($date2, $date1)", context); // true
+Object formatted = evaluator.evaluate("formatDate($now, 'yyyy-MM-dd')", context); // "2023-06-15" (current date)
 ```
 
 ### Collection Functions
 
 ```java
-// Working with lists - requires setting variables first
-// Context setup (not shown in usage):
-// context.setVariable("numbers", List.of(10, 20, 30, 40, 50));
+Context context = new Context();
+context.setVariable("numbers", Arrays.asList(1, 2, 3, 4, 5));
+context.setVariable("fruits", Arrays.asList("apple", "banana", "cherry"));
 
-// Then in expressions:
-size($numbers)                            // Returns: 5
-first($numbers)                           // Returns: 10
-last($numbers)                            // Returns: 50
-subList($numbers, 1, 4)                   // Returns: [20, 30, 40]
-contains($numbers, 30)                    // Returns: true
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
 
-// Getting collection sizes
-size("Hello")                             // Returns: 5 (string length)
-// For maps:
-// context.setVariable("myMap", Map.of("a", 1, "b", 2));
-size($myMap)                              // Returns: 2 (map size)
+Boolean containsNumber = (Boolean) evaluator.evaluate("contains($numbers, 3)", context); // true
+Boolean containsFruit = (Boolean) evaluator.evaluate("contains($fruits, 'banana')", context); // true
+Integer size = (Integer) evaluator.evaluate("size($numbers)", context); // 5
+Boolean isEmpty = (Boolean) evaluator.evaluate("isEmpty($fruits)", context); // false
 ```
 
-### Utility Functions
+## Custom Function Examples
+
+### Registering and Using Custom Functions
 
 ```java
-// Type detection and conversion
-typeof(42)                                // Returns: "number"
-typeof("hello")                           // Returns: "string"
-typeof(null)                              // Returns: "null"
+// Create a custom function for calculating tax
+Function<Object[], Object> calculateTax = args -> {
+    if (args.length != 2) {
+        throw new IllegalArgumentException("calculateTax requires 2 arguments: amount and rate");
+    }
+    
+    Double amount = Double.valueOf(args[0].toString());
+    Double rate = Double.valueOf(args[1].toString());
+    return amount * (rate / 100);
+};
 
-// Type conversions
-toString(42)                              // Returns: "42"
-toNumber("123")                           // Returns: 123
-toBoolean("true")                         // Returns: true
-toBoolean(1)                              // Returns: true
+// Register the function
+Context context = new Context();
+context.registerFunction("calculateTax", calculateTax);
+
+// Use the function
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
+
+Double tax = (Double) evaluator.evaluate("calculateTax(1000, 20)", context); // 200.0
+Double total = (Double) evaluator.evaluate("1000 + calculateTax(1000, 20)", context); // 1200.0
 ```
 
-### Combining Functions
+## Advanced Examples
+
+### Chaining Operations
 
 ```java
-// Working with collections and string functions
-// Instead of:
-// $items = split("apple,banana,cherry", ",")
+Context context = new Context();
+context.setVariable("amount", 1000);
+context.setVariable("taxRate", 20);
+context.setVariable("discountRate", 10);
 
-// Do this:
-// First get the result of split:
-// List<?> items = (List<?>) evaluator.evaluate("split('apple,banana,cherry', ',')", context);
-// context.setVariable("items", items);
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
 
-// Then use items in another expression:
-join(" + ", subList($items, 0, 2))        // Returns: "apple + banana"
+// Calculate final price with tax and discount
+Double finalAmount = (Double) evaluator.evaluate(
+    "$amount * (1 + $taxRate/100) * (1 - $discountRate/100)", 
+    context
+); // 1080.0
 ```
 
-## Logical Operators Examples
-
-Expresso now supports logical operators (`&&`, `||`, `!`) that work with boolean values and handle nulls gracefully:
+### Conditional Logic
 
 ```java
-// Basic logical operations
-context.setVariable("isActive", true);
-context.setVariable("isAdmin", false);
+Context context = new Context();
+context.setVariable("score", 85);
 
-// AND operator
-boolean isActiveAdmin = (boolean) evaluator.evaluate("$isActive && $isAdmin", context);
-// Result: false
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
 
-// OR operator
-boolean canAccess = (boolean) evaluator.evaluate("$isActive || $isAdmin", context);
-// Result: true
-
-// NOT operator
-boolean isNotAdmin = (boolean) evaluator.evaluate("!$isAdmin", context);
-// Result: true
-
-// Complex conditions
-boolean complexCondition = (boolean) evaluator.evaluate(
-    "($isActive && !$isAdmin) || ($isActive && $isAdmin)", context);
-// Result: true
-
-// Short-circuit evaluation
-context.setVariable("user", null);
-// This won't throw an error due to short-circuit
-boolean result = (boolean) evaluator.evaluate("false && $user.isAdmin", context);
-// Result: false
-
-// Null handling in logical operations
-context.setVariable("nullVar", null);
-boolean nullIsFalsy = (boolean) evaluator.evaluate("!$nullVar", context);
-// Result: true (null is treated as false)
-
-boolean orWithNull = (boolean) evaluator.evaluate("true || $nullVar", context);
-// Result: true
-
-boolean andWithNull = (boolean) evaluator.evaluate("$nullVar && true", context);
-// Result: false
+// Grade calculation
+String grade = (String) evaluator.evaluate(
+    "$score >= 90 ? 'A' : $score >= 80 ? 'B' : $score >= 70 ? 'C' : $score >= 60 ? 'D' : 'F'",
+    context
+); // "B"
 ```
 
-## Comparison Functions Examples
-
-Expresso provides comparison functions for comparing values:
+### Complex Expressions
 
 ```java
-// Numeric comparisons
-context.setVariable("age", 25);
-context.setVariable("minAge", 18);
-context.setVariable("maxAge", 65);
+// Complex example combining multiple features
+Context context = new Context();
+context.setVariable("person", Map.of(
+    "name", "John Smith",
+    "age", 35,
+    "active", true,
+    "scores", Arrays.asList(85, 90, 78, 92, 88)
+));
 
-boolean isAdult = (boolean) evaluator.evaluate("greaterThanOrEqual($age, $minAge)", context);
-// Result: true
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
 
-boolean isRetired = (boolean) evaluator.evaluate("greaterThan($age, $maxAge)", context);
-// Result: false
-
-// String comparisons
-context.setVariable("name", "Alice");
-context.setVariable("otherName", "Bob");
-
-boolean nameComesFirst = (boolean) evaluator.evaluate("lessThan($name, $otherName)", context);
-// Result: true (alphabetically, "Alice" comes before "Bob")
-
-// Date comparisons
-context.setVariable("today", LocalDate.now());
-context.setVariable("pastDate", LocalDate.now().minusDays(30));
-
-boolean isPast = (boolean) evaluator.evaluate("lessThan($pastDate, $today)", context);
-// Result: true
-
-// Equality checks
-context.setVariable("x", 5);
-context.setVariable("y", "5");
-
-boolean strictlyEqual = (boolean) evaluator.evaluate("strictEquals($x, $y)", context);
-// Result: false (different types)
-
-boolean notEqual = (boolean) evaluator.evaluate("notEquals($x, $y)", context);
-// Result: true
-
-// Combining comparisons with logical operators
-boolean inRange = (boolean) evaluator.evaluate(
-    "greaterThanOrEqual($age, $minAge) && lessThanOrEqual($age, $maxAge)", context);
-// Result: true
+// Calculate average score and determine if person is eligible
+Boolean eligible = (Boolean) evaluator.evaluate(
+    "$person.active && $person.age < 40 && (" +
+    "($person.scores[0] + $person.scores[1] + $person.scores[2] + $person.scores[3] + $person.scores[4]) / 5 >= 80" +
+    ")",
+    context
+); // true
 ``` 
