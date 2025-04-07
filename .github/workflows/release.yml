@@ -30,26 +30,27 @@ jobs:
     - name: Set Release Version
       run: echo "RELEASE_VERSION=${{ github.event.inputs.release_version }}" >> $GITHUB_ENV
     
-    - name: Import GPG key
-      uses: crazy-max/ghaction-import-gpg@v5
-      with:
-        gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-        passphrase: ${{ secrets.GPG_PASSPHRASE }}
-        fingerprint: LONG
-        git_user_signingkey: true
-        git_commit_gpgsign: true
-        git_tag_gpgsign: true
-    
-    - name: Distribute GPG key
+    - name: Set up GPG
       run: |
-        gpg --list-keys
-        gpg --keyid-format LONG --list-secret-keys
-        export GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep sec | awk '{print $2}' | cut -d'/' -f2)
-        echo "Using GPG key: $GPG_KEY_ID"
-        gpg --send-keys --keyserver keyserver.ubuntu.com $GPG_KEY_ID
-        gpg --send-keys --keyserver keys.openpgp.org $GPG_KEY_ID
-        gpg --send-keys --keyserver pgp.mit.edu $GPG_KEY_ID
+        echo "${{ secrets.GPG_PRIVATE_KEY }}" | base64 --decode > private.key
+        gpg --batch --import private.key
+        rm private.key
+        
+        # Get the key ID
+        GPG_KEY_ID=$(gpg --list-secret-keys --keyid-format LONG | grep -B 1 ".*@.*" | head -n 1 | awk '{print $2}' | cut -d'/' -f2)
         echo "GPG_KEY_ID=$GPG_KEY_ID" >> $GITHUB_ENV
+        echo "Using GPG key: $GPG_KEY_ID"
+        
+        # Distribute the key
+        gpg --keyserver keyserver.ubuntu.com --send-keys $GPG_KEY_ID
+        gpg --keyserver keys.openpgp.org --send-keys $GPG_KEY_ID
+        gpg --keyserver pgp.mit.edu --send-keys $GPG_KEY_ID
+        
+        # Create GPG agent config
+        mkdir -p ~/.gnupg
+        echo "allow-loopback-pinentry" > ~/.gnupg/gpg-agent.conf
+        echo "pinentry-mode loopback" > ~/.gnupg/gpg.conf
+        gpg-connect-agent reloadagent /bye
     
     - name: Build with Maven
       run: mvn -B clean package -Prelease
