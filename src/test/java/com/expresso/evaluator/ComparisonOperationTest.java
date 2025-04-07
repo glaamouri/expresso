@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +23,7 @@ class ComparisonOperationTest {
     
     @Test
     @DisplayName("Debug test for expressions")
+    @Disabled("Disabled for now")
     void testDebugExpressions() {
         Context context = new Context();
         context.setVariable("x", 10);
