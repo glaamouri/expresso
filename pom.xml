@@ -35,6 +35,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <revision>local-SNAPSHOT</revision>
+        <gpg.skip>true</gpg.skip>
     </properties>
 
     <dependencies>
@@ -166,6 +167,7 @@
             <id>release</id>
             <properties>
                 <revision>${env.RELEASE_VERSION}</revision>
+                <gpg.skip>false</gpg.skip>
             </properties>
             <build>
                 <plugins>
@@ -174,7 +176,6 @@
                         <artifactId>maven-gpg-plugin</artifactId>
                         <version>1.5</version>
                         <configuration>
-                            <skip>${gpg.skip}</skip>
                             <gpgArguments>
                                 <arg>--pinentry-mode</arg>
                                 <arg>loopback</arg>
