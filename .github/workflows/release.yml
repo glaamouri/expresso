@@ -32,33 +32,26 @@ jobs:
     
     - name: Set up GPG
       run: |
+        # Debug: Show gpg version
+        gpg --version
+        
         # Create proper GPG directories with permissions
         mkdir -p ~/.gnupg
         chmod 700 ~/.gnupg
         
-        # Configure GPG to use loopback pinentry
-        echo "allow-loopback-pinentry" > ~/.gnupg/gpg-agent.conf
-        echo "pinentry-mode loopback" > ~/.gnupg/gpg.conf
-        echo "use-agent" >> ~/.gnupg/gpg.conf
-        echo "batch" >> ~/.gnupg/gpg.conf
-        echo "no-tty" >> ~/.gnupg/gpg.conf
-        chmod 600 ~/.gnupg/*
-        
-        # Restart the GPG agent
-        gpgconf --kill gpg-agent
-        gpg-agent --daemon
+        # Configure GPG for batch mode
+        echo "batch" > ~/.gnupg/gpg.conf
+        echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+        chmod 600 ~/.gnupg/gpg.conf
         
         # Save and import the key
         echo "${{ secrets.GPG_PRIVATE_KEY }}" > private.key
         chmod 600 private.key
-        gpg --batch --import private.key 2>&1
+        cat private.key | gpg --batch --import
         rm private.key
         
-        # Create a script to provide the passphrase
-        echo "echo \$GPG_PASSPHRASE" > ~/.gnupg/passphrase-file
-        chmod 700 ~/.gnupg/passphrase-file
-        
-        # List keys and extract key ID
+        # Debug: List all keys
+        echo "Listing all keys:"
         gpg --list-secret-keys --keyid-format LONG
         
         # Get the key ID
@@ -67,9 +60,9 @@ jobs:
         echo "Using GPG key: $GPG_KEY_ID"
         
         # Distribute the key - continue if fails
-        gpg --keyserver keyserver.ubuntu.com --send-keys $GPG_KEY_ID || true
-        gpg --keyserver keys.openpgp.org --send-keys $GPG_KEY_ID || true
-        gpg --keyserver pgp.mit.edu --send-keys $GPG_KEY_ID || true
+        gpg --batch --yes --keyserver keyserver.ubuntu.com --send-keys $GPG_KEY_ID || true
+        gpg --batch --yes --keyserver keys.openpgp.org --send-keys $GPG_KEY_ID || true
+        gpg --batch --yes --keyserver pgp.mit.edu --send-keys $GPG_KEY_ID || true
     
     - name: Build with Maven
       run: |
