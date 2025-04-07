@@ -10,7 +10,6 @@ import java.util.ArrayList;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Disabled;
 
 import com.expresso.ExpressionEvaluator;
 import com.expresso.context.Context;
@@ -216,12 +215,6 @@ class PropertyAccessTest {
         departments.add(department2);
         
         company.put("departments", departments);
-        
-        // Debug outputs to verify structure
-        System.out.println("Company structure:");
-        System.out.println("Company name: " + company.get("name"));
-        System.out.println("Departments is a List with size: " + ((List)company.get("departments")).size());
-        System.out.println("First department name: " + ((Map)((List)company.get("departments")).get(0)).get("name"));
         
         // Set up context
         Context context = new Context();
