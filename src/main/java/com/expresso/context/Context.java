@@ -1,5 +1,8 @@
 package com.expresso.context;
 
+import com.expresso.context.functions.FunctionRegistry;
+import com.expresso.exception.ArrayIndexOutOfBoundsException;
+import com.expresso.exception.PropertyAccessException;
 import com.expresso.exception.PropertyNotFoundException;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +19,31 @@ public class Context {
     this.functions = new HashMap<>();
     registerBuiltInFunctions();
   }
+  
+  /**
+   * Creates a new Context with a single variable
+   * 
+   * @param name The variable name
+   * @param value The variable value
+   * @return A new Context with the specified variable
+   */
+  public static Context of(String name, Object value) {
+    Context context = new Context();
+    context.setVariable(name, value);
+    return context;
+  }
+  
+  /**
+   * Creates a new Context with variables from a map
+   * 
+   * @param variables Map of variable names to values
+   * @return A new Context with the specified variables
+   */
+  public static Context of(Map<String, Object> variables) {
+    Context context = new Context();
+    variables.forEach(context::setVariable);
+    return context;
+  }
 
   /**
    * Sets a variable in the context
@@ -26,6 +54,29 @@ public class Context {
   public void setVariable(String name, Object value) {
     variables.put(name, value);
   }
+  
+  /**
+   * Sets a variable in the context with a fluent interface
+   * 
+   * @param name The variable name
+   * @param value The variable value
+   * @return This context for method chaining
+   */
+  public Context with(String name, Object value) {
+    variables.put(name, value);
+    return this;
+  }
+  
+  /**
+   * Sets multiple variables from a map with a fluent interface
+   * 
+   * @param variables Map of variable names to values
+   * @return This context for method chaining
+   */
+  public Context withAll(Map<String, Object> variables) {
+    variables.forEach(this::setVariable);
+    return this;
+  }
 
   /**
    * Gets a variable from the context
@@ -35,6 +86,16 @@ public class Context {
    */
   public Object getVariable(String name) {
     return variables.get(name);
+  }
+
+  /**
+   * Checks if a variable exists in the context
+   *
+   * @param name The variable name
+   * @return true if the variable exists, false otherwise
+   */
+  public boolean variableExists(String name) {
+    return variables.containsKey(name);
   }
 
   /**
@@ -69,12 +130,12 @@ public class Context {
 
     if (target == null) {
       if (isNullSafe) {
-
         return null;
       }
       throw new PropertyNotFoundException("Cannot access property on null value");
     }
 
+    // Handle array access notation
     // Check for null-safe array access
     if (property.contains("?[") && property.endsWith("]")) {
       int bracketIndex = property.indexOf("?[");
@@ -87,7 +148,6 @@ public class Context {
           arrayProperty.isEmpty() ? target : resolveProperty(target, arrayProperty, isNullSafe);
 
       if (array == null) {
-
         return null; // Null-safe access, return null instead of throwing
       }
 
@@ -96,7 +156,6 @@ public class Context {
         List<?> list = (List<?>) array;
 
         if (index < 0 || index >= list.size()) {
-
           return null; // Null-safe access, return null instead of throwing
         }
         return list.get(index);
@@ -123,7 +182,6 @@ public class Context {
 
       if (array == null) {
         if (isNullSafe) {
-
           return null;
         }
         throw new PropertyNotFoundException("Cannot access array on null value");
@@ -135,10 +193,9 @@ public class Context {
 
         if (index < 0 || index >= list.size()) {
           if (isNullSafe) {
-
             return null;
           }
-          throw new PropertyNotFoundException("Array index out of bounds: " + index);
+          throw new ArrayIndexOutOfBoundsException(list, index, list.size());
         }
         return list.get(index);
       } else if (array.getClass().isArray()) {
@@ -147,15 +204,14 @@ public class Context {
           if (isNullSafe) {
             return null;
           }
-          throw new PropertyNotFoundException("Array index out of bounds: " + index);
+          throw new ArrayIndexOutOfBoundsException(array, index, length);
         }
         return java.lang.reflect.Array.get(array, index);
       } else {
         if (isNullSafe) {
           return null;
         }
-        throw new PropertyNotFoundException(
-            "Cannot access index on non-array/list type: " + array.getClass());
+        throw new PropertyAccessException(array, property, "Cannot access index on non-array/list type");
       }
     }
 
@@ -184,7 +240,7 @@ public class Context {
           if (isNullSafe) {
             return null;
           }
-          throw new PropertyNotFoundException("Property not found: " + part, e);
+          throw new PropertyAccessException(current, part, "Property not found", e);
         }
       }
     }
@@ -204,112 +260,7 @@ public class Context {
   }
 
   private void registerBuiltInFunctions() {
-    // String functions
-    registerFunction("upperCase", args -> ((String) args[0]).toUpperCase());
-    registerFunction("lowerCase", args -> ((String) args[0]).toLowerCase());
-    registerFunction("length", args -> ((String) args[0]).length());
-    registerFunction("trim", args -> ((String) args[0]).trim());
-    registerFunction("substring", args -> {
-        String str = (String) args[0];
-        int start = ((Number) args[1]).intValue();
-        int length = args.length > 2 ? ((Number) args[2]).intValue() : str.length() - start;
-        return str.substring(start, Math.min(start + length, str.length()));
-    });
-    registerFunction("replace", args -> {
-        String str = (String) args[0];
-        String oldStr = (String) args[1];
-        String newStr = (String) args[2];
-        return str.replace(oldStr, newStr);
-    });
-    registerFunction("contains", args -> {
-        String str = (String) args[0];
-        String search = (String) args[1];
-        return str.contains(search);
-    });
-
-    // Math functions
-    registerFunction("abs", args -> Math.abs(((Number) args[0]).doubleValue()));
-    registerFunction("ceil", args -> Math.ceil(((Number) args[0]).doubleValue()));
-    registerFunction("floor", args -> Math.floor(((Number) args[0]).doubleValue()));
-    registerFunction("round", args -> {
-        double num = ((Number) args[0]).doubleValue();
-        if (args.length > 1) {
-            int decimals = ((Number) args[1]).intValue();
-            double factor = Math.pow(10, decimals);
-            return Math.round(num * factor) / factor;
-        }
-        return (long) Math.round(num);
-    });
-    registerFunction("max", args -> {
-        double a = ((Number) args[0]).doubleValue();
-        double b = ((Number) args[1]).doubleValue();
-        return Math.max(a, b);
-    });
-    registerFunction("min", args -> {
-        double a = ((Number) args[0]).doubleValue();
-        double b = ((Number) args[1]).doubleValue();
-        return Math.min(a, b);
-    });
-    registerFunction("pow", args -> {
-        double base = ((Number) args[0]).doubleValue();
-        double exponent = ((Number) args[1]).doubleValue();
-        return Math.pow(base, exponent);
-    });
-    registerFunction("sqrt", args -> {
-        double num = ((Number) args[0]).doubleValue();
-        return Math.sqrt(num);
-    });
-    registerFunction("random", args -> Math.random());
-
-    // Logic functions
-    registerFunction("isNull", args -> args[0] == null);
-    registerFunction(
-        "coalesce",
-        args -> {
-          for (Object arg : args) {
-            if (arg != null) return arg;
-          }
-          return null;
-        });
-    registerFunction("isEmpty", args -> {
-        if (args[0] == null) return true;
-        if (args[0] instanceof String) return ((String) args[0]).isEmpty();
-        if (args[0] instanceof List) return ((List<?>) args[0]).isEmpty();
-        if (args[0] instanceof Map) return ((Map<?, ?>) args[0]).isEmpty();
-        if (args[0].getClass().isArray()) return java.lang.reflect.Array.getLength(args[0]) == 0;
-        return false;
-    });
-    registerFunction("isNumber", args -> args[0] instanceof Number);
-    registerFunction("isString", args -> args[0] instanceof String);
-    registerFunction("isBoolean", args -> args[0] instanceof Boolean);
-         
-    // Date functions
-    registerFunction("format", args -> {
-        java.time.LocalDate date = (java.time.LocalDate) args[0];
-        String pattern = (String) args[1];
-        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern(pattern);
-        return date.format(formatter);
-    });
-    
-    registerFunction("parseDate", args -> {
-        String dateString = (String) args[0];
-        String pattern = (String) args[1];
-        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern(pattern);
-        return java.time.LocalDate.parse(dateString, formatter);
-    });
-    
-    registerFunction("now", args -> java.time.LocalDate.now());
-    
-    registerFunction("addDays", args -> {
-        java.time.LocalDate date = (java.time.LocalDate) args[0];
-        int days = ((Number) args[1]).intValue();
-        return date.plusDays(days);
-    });
-    
-    registerFunction("dateDiff", args -> {
-        java.time.LocalDate date1 = (java.time.LocalDate) args[0];
-        java.time.LocalDate date2 = (java.time.LocalDate) args[1];
-        return java.time.temporal.ChronoUnit.DAYS.between(date1, date2);
-    });
+    // Register all built-in functions from the function registry
+    FunctionRegistry.registerAllFunctions(this);
   }
 }

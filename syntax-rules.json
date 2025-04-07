@@ -1,0 +1,593 @@
+{
+  "version": "1.0",
+  "language": "Expresso",
+  "description": "Description of the Expresso expression language syntax.",
+  "operators": {
+    "arithmetic": [
+      {
+        "symbol": "+",
+        "name": "Addition",
+        "description": "Adds two numbers or concatenates strings",
+        "operands": [
+          {"type": ["number", "string"], "description": "Left operand"},
+          {"type": ["number", "string"], "description": "Right operand"}
+        ],
+        "returnType": ["number", "string"],
+        "example": "5 + 3 or 'hello' + 'world'"
+      },
+      {
+        "symbol": "-",
+        "name": "Subtraction",
+        "description": "Subtracts the right number from the left",
+        "operands": [
+          {"type": ["number"], "description": "Left operand"},
+          {"type": ["number"], "description": "Right operand"}
+        ],
+        "returnType": ["number"],
+        "example": "5 - 3"
+      },
+      {
+        "symbol": "*",
+        "name": "Multiplication",
+        "description": "Multiplies two numbers",
+        "operands": [
+          {"type": ["number"], "description": "Left operand"},
+          {"type": ["number"], "description": "Right operand"}
+        ],
+        "returnType": ["number"],
+        "example": "5 * 3"
+      },
+      {
+        "symbol": "/",
+        "name": "Division",
+        "description": "Divides the left number by the right",
+        "operands": [
+          {"type": ["number"], "description": "Left operand"},
+          {"type": ["number"], "description": "Right operand (non-zero)"}
+        ],
+        "returnType": ["number"],
+        "example": "6 / 2"
+      },
+      {
+        "symbol": "%",
+        "name": "Modulo",
+        "description": "Returns the remainder of dividing the left number by the right",
+        "operands": [
+          {"type": ["number"], "description": "Left operand"},
+          {"type": ["number"], "description": "Right operand (non-zero)"}
+        ],
+        "returnType": ["number"],
+        "example": "5 % 2"
+      }
+    ],
+    "comparison": [
+      {
+        "symbol": "==",
+        "name": "Equals",
+        "description": "Checks if two values are equal",
+        "operands": [
+          {"type": ["any"], "description": "Left operand"},
+          {"type": ["any"], "description": "Right operand"}
+        ],
+        "returnType": ["boolean"],
+        "example": "5 == 5 or $name == 'John'"
+      },
+      {
+        "symbol": "!=",
+        "name": "Not Equals",
+        "description": "Checks if two values are not equal",
+        "operands": [
+          {"type": ["any"], "description": "Left operand"},
+          {"type": ["any"], "description": "Right operand"}
+        ],
+        "returnType": ["boolean"],
+        "example": "5 != 3 or $name != 'John'"
+      },
+      {
+        "symbol": ">",
+        "name": "Greater Than",
+        "description": "Checks if the left value is greater than the right",
+        "operands": [
+          {"type": ["number", "string", "date"], "description": "Left operand"},
+          {"type": ["number", "string", "date"], "description": "Right operand"}
+        ],
+        "returnType": ["boolean"],
+        "example": "5 > 3 or $date > '2023-01-01'"
+      },
+      {
+        "symbol": ">=",
+        "name": "Greater Than or Equal",
+        "description": "Checks if the left value is greater than or equal to the right",
+        "operands": [
+          {"type": ["number", "string", "date"], "description": "Left operand"},
+          {"type": ["number", "string", "date"], "description": "Right operand"}
+        ],
+        "returnType": ["boolean"],
+        "example": "5 >= 5 or $date >= '2023-01-01'"
+      },
+      {
+        "symbol": "<",
+        "name": "Less Than",
+        "description": "Checks if the left value is less than the right",
+        "operands": [
+          {"type": ["number", "string", "date"], "description": "Left operand"},
+          {"type": ["number", "string", "date"], "description": "Right operand"}
+        ],
+        "returnType": ["boolean"],
+        "example": "3 < 5 or $date < '2023-01-01'"
+      },
+      {
+        "symbol": "<=",
+        "name": "Less Than or Equal",
+        "description": "Checks if the left value is less than or equal to the right",
+        "operands": [
+          {"type": ["number", "string", "date"], "description": "Left operand"},
+          {"type": ["number", "string", "date"], "description": "Right operand"}
+        ],
+        "returnType": ["boolean"],
+        "example": "3 <= 5 or $date <= '2023-01-01'"
+      }
+    ],
+    "logical": [
+      {
+        "symbol": "&&",
+        "name": "Logical AND",
+        "description": "Returns true if both operands are true",
+        "operands": [
+          {"type": ["boolean"], "description": "Left operand"},
+          {"type": ["boolean"], "description": "Right operand"}
+        ],
+        "returnType": ["boolean"],
+        "example": "$age > 18 && $hasLicense"
+      },
+      {
+        "symbol": "||",
+        "name": "Logical OR",
+        "description": "Returns true if either operand is true",
+        "operands": [
+          {"type": ["boolean"], "description": "Left operand"},
+          {"type": ["boolean"], "description": "Right operand"}
+        ],
+        "returnType": ["boolean"],
+        "example": "$isAdmin || $isManager"
+      },
+      {
+        "symbol": "!",
+        "name": "Logical NOT",
+        "description": "Returns the opposite of the boolean value",
+        "operands": [
+          {"type": ["boolean"], "description": "Boolean value to negate"}
+        ],
+        "returnType": ["boolean"],
+        "example": "!$isBlocked"
+      }
+    ],
+    "conditional": [
+      {
+        "symbol": "? :",
+        "name": "Ternary Operator",
+        "description": "Returns one of two values based on a condition",
+        "operands": [
+          {"type": ["boolean"], "description": "Condition"},
+          {"type": ["any"], "description": "Value if condition is true"},
+          {"type": ["any"], "description": "Value if condition is false"}
+        ],
+        "returnType": ["any"],
+        "example": "$age >= 18 ? 'Adult' : 'Minor'"
+      }
+    ],
+    "nullSafe": [
+      {
+        "symbol": "?.",
+        "name": "Null-safe Property Access",
+        "description": "Safely accesses a property, returning null if the object is null",
+        "operands": [
+          {"type": ["object", "null"], "description": "Object to access property on"},
+          {"type": ["string"], "description": "Property name (implicit)"}
+        ],
+        "returnType": ["any", "null"],
+        "example": "$user?.name"
+      },
+      {
+        "symbol": "?[",
+        "name": "Null-safe Array Access",
+        "description": "Safely accesses an array element, returning null if the array is null",
+        "operands": [
+          {"type": ["array", "list", "null"], "description": "Array to access"},
+          {"type": ["number"], "description": "Index"}
+        ],
+        "returnType": ["any", "null"],
+        "example": "$items?[0]"
+      },
+      {
+        "symbol": "??",
+        "name": "Null Coalescing",
+        "description": "Returns the right operand if the left is null, otherwise returns the left",
+        "operands": [
+          {"type": ["any"], "description": "Left operand (primary value)"},
+          {"type": ["any"], "description": "Right operand (fallback value)"}
+        ],
+        "returnType": ["any"],
+        "example": "$user.name ?? 'Unknown'"
+      }
+    ],
+    "property": [
+      {
+        "symbol": ".",
+        "name": "Property Access",
+        "description": "Accesses a property of an object",
+        "operands": [
+          {"type": ["object"], "description": "Object to access property on"},
+          {"type": ["string"], "description": "Property name (implicit)"}
+        ],
+        "returnType": ["any"],
+        "example": "$user.address.city"
+      },
+      {
+        "symbol": "[",
+        "name": "Array Access",
+        "description": "Accesses an element of an array",
+        "operands": [
+          {"type": ["array", "list"], "description": "Array to access"},
+          {"type": ["number"], "description": "Index"}
+        ],
+        "returnType": ["any"],
+        "example": "$items[0]"
+      }
+    ]
+  },
+  "variables": {
+    "prefix": "$",
+    "description": "Variables are prefixed with $ and can reference values set in the context",
+    "examples": ["$user", "$age", "$items"]
+  },
+  "literals": [
+    {
+      "type": "null",
+      "description": "Represents a null value",
+      "syntax": "null",
+      "example": "null"
+    },
+    {
+      "type": "boolean",
+      "description": "Boolean values",
+      "syntax": "true, false",
+      "examples": ["true", "false"]
+    },
+    {
+      "type": "number",
+      "description": "Integer or decimal numbers",
+      "syntax": "Digits, with optional decimal point",
+      "examples": ["42", "3.14", "-10", "1.5e3"]
+    },
+    {
+      "type": "string",
+      "description": "Text enclosed in single quotes",
+      "syntax": "'text'",
+      "examples": ["'hello'", "'John Doe'", "'2023-01-01'"]
+    },
+    {
+      "type": "array",
+      "description": "Arrays of values enclosed in square brackets and separated by commas",
+      "syntax": "[value1, value2, ...]",
+      "examples": ["[1, 2, 3]", "['red', 'green', 'blue']"]
+    }
+  ],
+  "functions": [
+    {
+      "name": "abs",
+      "description": "Returns the absolute value of a number",
+      "arguments": [
+        {"name": "number", "type": ["number"], "description": "Number to get absolute value of"}
+      ],
+      "returnType": ["number"],
+      "example": "abs(-5)"
+    },
+    {
+      "name": "round",
+      "description": "Rounds a number to the nearest integer",
+      "arguments": [
+        {"name": "number", "type": ["number"], "description": "Number to round"}
+      ],
+      "returnType": ["number"],
+      "example": "round(3.7)"
+    },
+    {
+      "name": "floor",
+      "description": "Rounds a number down to the nearest integer",
+      "arguments": [
+        {"name": "number", "type": ["number"], "description": "Number to floor"}
+      ],
+      "returnType": ["number"],
+      "example": "floor(3.7)"
+    },
+    {
+      "name": "ceil",
+      "description": "Rounds a number up to the nearest integer",
+      "arguments": [
+        {"name": "number", "type": ["number"], "description": "Number to ceil"}
+      ],
+      "returnType": ["number"],
+      "example": "ceil(3.2)"
+    },
+    {
+      "name": "min",
+      "description": "Returns the smallest of the provided numbers",
+      "arguments": [
+        {"name": "numbers", "type": ["number"], "description": "Two or more numbers", "variadic": true}
+      ],
+      "returnType": ["number"],
+      "example": "min(5, 3, 9)"
+    },
+    {
+      "name": "max",
+      "description": "Returns the largest of the provided numbers",
+      "arguments": [
+        {"name": "numbers", "type": ["number"], "description": "Two or more numbers", "variadic": true}
+      ],
+      "returnType": ["number"],
+      "example": "max(5, 3, 9)"
+    },
+    {
+      "name": "sum",
+      "description": "Returns the sum of the provided numbers",
+      "arguments": [
+        {"name": "numbers", "type": ["number"], "description": "One or more numbers", "variadic": true}
+      ],
+      "returnType": ["number"],
+      "example": "sum(1, 2, 3, 4)"
+    },
+    {
+      "name": "avg",
+      "description": "Returns the average (mean) of the provided numbers",
+      "arguments": [
+        {"name": "numbers", "type": ["number"], "description": "One or more numbers", "variadic": true}
+      ],
+      "returnType": ["number"],
+      "example": "avg(1, 2, 3, 4)"
+    },
+    {
+      "name": "length",
+      "description": "Returns the length of a string, array, or list",
+      "arguments": [
+        {"name": "value", "type": ["string", "array", "list"], "description": "Value to get length of"}
+      ],
+      "returnType": ["number"],
+      "example": "length('hello') or length($items)"
+    },
+    {
+      "name": "toLowerCase",
+      "description": "Converts a string to lowercase",
+      "arguments": [
+        {"name": "string", "type": ["string"], "description": "String to convert"}
+      ],
+      "returnType": ["string"],
+      "example": "toLowerCase('Hello')"
+    },
+    {
+      "name": "toUpperCase",
+      "description": "Converts a string to uppercase",
+      "arguments": [
+        {"name": "string", "type": ["string"], "description": "String to convert"}
+      ],
+      "returnType": ["string"],
+      "example": "toUpperCase('hello')"
+    },
+    {
+      "name": "substring",
+      "description": "Returns a substring from the given starting index to the ending index",
+      "arguments": [
+        {"name": "string", "type": ["string"], "description": "String to get substring from"},
+        {"name": "start", "type": ["number"], "description": "Start index (inclusive)"},
+        {"name": "end", "type": ["number"], "description": "End index (exclusive)", "optional": true}
+      ],
+      "returnType": ["string"],
+      "example": "substring('hello', 1, 3)"
+    },
+    {
+      "name": "trim",
+      "description": "Removes whitespace from the beginning and end of a string",
+      "arguments": [
+        {"name": "string", "type": ["string"], "description": "String to trim"}
+      ],
+      "returnType": ["string"],
+      "example": "trim(' hello ')"
+    },
+    {
+      "name": "contains",
+      "description": "Checks if a string contains a substring, or if an array/list contains an element",
+      "arguments": [
+        {"name": "container", "type": ["string", "array", "list"], "description": "Container to search in"},
+        {"name": "value", "type": ["any"], "description": "Value to search for"}
+      ],
+      "returnType": ["boolean"],
+      "example": "contains('hello world', 'world') or contains($items, 42)"
+    },
+    {
+      "name": "startsWith",
+      "description": "Checks if a string starts with the specified prefix",
+      "arguments": [
+        {"name": "string", "type": ["string"], "description": "String to check"},
+        {"name": "prefix", "type": ["string"], "description": "Prefix to look for"}
+      ],
+      "returnType": ["boolean"],
+      "example": "startsWith('hello world', 'hello')"
+    },
+    {
+      "name": "endsWith",
+      "description": "Checks if a string ends with the specified suffix",
+      "arguments": [
+        {"name": "string", "type": ["string"], "description": "String to check"},
+        {"name": "suffix", "type": ["string"], "description": "Suffix to look for"}
+      ],
+      "returnType": ["boolean"],
+      "example": "endsWith('hello world', 'world')"
+    },
+    {
+      "name": "replace",
+      "description": "Replaces all occurrences of a substring with another string",
+      "arguments": [
+        {"name": "string", "type": ["string"], "description": "Original string"},
+        {"name": "target", "type": ["string"], "description": "Substring to replace"},
+        {"name": "replacement", "type": ["string"], "description": "Replacement string"}
+      ],
+      "returnType": ["string"],
+      "example": "replace('hello world', 'world', 'universe')"
+    },
+    {
+      "name": "toNumber",
+      "description": "Converts a string to a number",
+      "arguments": [
+        {"name": "string", "type": ["string"], "description": "String to convert"}
+      ],
+      "returnType": ["number"],
+      "example": "toNumber('42')"
+    },
+    {
+      "name": "toString",
+      "description": "Converts a value to a string",
+      "arguments": [
+        {"name": "value", "type": ["any"], "description": "Value to convert"}
+      ],
+      "returnType": ["string"],
+      "example": "toString(42)"
+    },
+    {
+      "name": "now",
+      "description": "Returns the current date and time",
+      "arguments": [],
+      "returnType": ["date"],
+      "example": "now()"
+    },
+    {
+      "name": "date",
+      "description": "Creates a date from a string",
+      "arguments": [
+        {"name": "dateString", "type": ["string"], "description": "Date string in ISO format"}
+      ],
+      "returnType": ["date"],
+      "example": "date('2023-01-01')"
+    },
+    {
+      "name": "formatDate",
+      "description": "Formats a date according to the specified pattern",
+      "arguments": [
+        {"name": "date", "type": ["date"], "description": "Date to format"},
+        {"name": "pattern", "type": ["string"], "description": "Format pattern"}
+      ],
+      "returnType": ["string"],
+      "example": "formatDate(now(), 'yyyy-MM-dd')"
+    },
+    {
+      "name": "year",
+      "description": "Extracts the year from a date",
+      "arguments": [
+        {"name": "date", "type": ["date"], "description": "Date to extract from"}
+      ],
+      "returnType": ["number"],
+      "example": "year(now())"
+    },
+    {
+      "name": "month",
+      "description": "Extracts the month from a date (1-12)",
+      "arguments": [
+        {"name": "date", "type": ["date"], "description": "Date to extract from"}
+      ],
+      "returnType": ["number"],
+      "example": "month(now())"
+    },
+    {
+      "name": "day",
+      "description": "Extracts the day of the month from a date",
+      "arguments": [
+        {"name": "date", "type": ["date"], "description": "Date to extract from"}
+      ],
+      "returnType": ["number"],
+      "example": "day(now())"
+    },
+    {
+      "name": "dayOfWeek",
+      "description": "Returns the day of the week (1-7, where 1 is Monday)",
+      "arguments": [
+        {"name": "date", "type": ["date"], "description": "Date to extract from"}
+      ],
+      "returnType": ["number"],
+      "example": "dayOfWeek(now())"
+    },
+    {
+      "name": "isNull",
+      "description": "Checks if a value is null, suppressing PropertyNotFoundExceptions",
+      "arguments": [
+        {"name": "value", "type": ["any"], "description": "Value to check"}
+      ],
+      "returnType": ["boolean"],
+      "example": "isNull($user.address)"
+    },
+    {
+      "name": "coalesce",
+      "description": "Returns the first non-null value, suppressing PropertyNotFoundExceptions",
+      "arguments": [
+        {"name": "values", "type": ["any"], "description": "Two or more values", "variadic": true}
+      ],
+      "returnType": ["any"],
+      "example": "coalesce($user.name, 'Unknown')"
+    },
+    {
+      "name": "if",
+      "description": "Returns one value if the condition is true, another if false",
+      "arguments": [
+        {"name": "condition", "type": ["boolean"], "description": "Condition to evaluate"},
+        {"name": "trueValue", "type": ["any"], "description": "Value if condition is true"},
+        {"name": "falseValue", "type": ["any"], "description": "Value if condition is false"}
+      ],
+      "returnType": ["any"],
+      "example": "if($age >= 18, 'Adult', 'Minor')"
+    }
+  ],
+  "precedence": [
+    {"level": 1, "operators": ["(", ")"], "description": "Parentheses, function calls, array access"},
+    {"level": 2, "operators": [".", "?."], "description": "Property access"},
+    {"level": 3, "operators": ["!"], "description": "Logical NOT"},
+    {"level": 4, "operators": ["*", "/", "%"], "description": "Multiplication, division, modulo"},
+    {"level": 5, "operators": ["+", "-"], "description": "Addition, subtraction"},
+    {"level": 6, "operators": [">", ">=", "<", "<="], "description": "Relational operators"},
+    {"level": 7, "operators": ["==", "!="], "description": "Equality operators"},
+    {"level": 8, "operators": ["&&"], "description": "Logical AND"},
+    {"level": 9, "operators": ["||"], "description": "Logical OR"},
+    {"level": 10, "operators": ["? :"], "description": "Ternary conditional"},
+    {"level": 11, "operators": ["??"], "description": "Null coalescing"}
+  ],
+  "errors": [
+    {
+      "type": "SyntaxException",
+      "description": "Error in the syntax of the expression",
+      "examples": [
+        "Missing closing parenthesis: sum(1, 2",
+        "Unbalanced brackets: $arr[0",
+        "Invalid operator sequence: 5 + * 3",
+        "Unexpected end of expression: 5 +"
+      ]
+    },
+    {
+      "type": "PropertyNotFoundException",
+      "description": "Error when a property, variable, or array element cannot be found",
+      "examples": [
+        "Variable not found: $nonExistentVar",
+        "Property not found: $user.nonExistentProperty",
+        "Array index out of bounds: $list[10]",
+        "Accessing property on null: $user.address.city (when $user.address is null)"
+      ]
+    },
+    {
+      "type": "EvaluationException",
+      "description": "Error during expression evaluation",
+      "examples": [
+        "Unknown function: nonExistentFunction()",
+        "Missing function argument: sum()",
+        "Type conversion error: toNumber('abc')",
+        "Division by zero: 5 / 0",
+        "Invalid operation: 'hello' - 5"
+      ]
+    }
+  ]
+} 

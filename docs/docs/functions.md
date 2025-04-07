@@ -6,95 +6,146 @@ sidebar_position: 4
 
 # Built-in Functions
 
-Expresso provides a variety of built-in functions to help you perform common operations in your expressions.
+Expresso provides a variety of built-in functions to help you perform common operations in your expressions. Each function is documented with its parameter types and return type.
 
 ## String Functions
 
-```java
-// Length of a string
-length($string)
-
-// Convert to uppercase
-upperCase($string)
-
-// Convert to lowercase
-lowerCase($string)
-
-// Get substring
-substring($string, start, length)
-
-// Replace text
-replace($string, old, new)
-
-// Trim whitespace
-trim($string)
-
-// Check if string contains
-contains($string, search)
-```
+| Function | Description | Parameters | Return Type |
+|----------|-------------|------------|------------|
+| `length(str)` | Returns the length of a string | `str: String` | `Integer` |
+| `upperCase(str)` | Converts string to uppercase | `str: String` | `String` |
+| `lowerCase(str)` | Converts string to lowercase | `str: String` | `String` |
+| `substring(str, start, [length])` | Gets a substring | `str: String`, `start: Number`, `length: Number (optional)` | `String` |
+| `replace(str, old, new)` | Replaces text in a string | `str: String`, `old: String`, `new: String` | `String` |
+| `trim(str)` | Removes whitespace from string | `str: String` | `String` |
+| `contains(str, search)` | Checks if string contains text | `str: String`, `search: String` | `Boolean` |
+| `startsWith(str, prefix)` | Checks if string starts with text | `str: String`, `prefix: String` | `Boolean` |
+| `endsWith(str, suffix)` | Checks if string ends with text | `str: String`, `suffix: String` | `Boolean` |
+| `split(str, delimiter)` | Splits string into a list | `str: String`, `delimiter: String` | `List<String>` |
+| `join(delimiter, elements)` | Joins list elements into a string | `delimiter: String`, `elements: List` | `String` |
+| `charAt(str, index)` | Gets character at index | `str: String`, `index: Number` | `String` |
+| `indexOf(str, search)` | Gets position of substring | `str: String`, `search: String` | `Integer` |
 
 ## Math Functions
 
-```java
-// Absolute value
-abs($number)
-
-// Round number
-round($number, decimals)
-
-// Maximum value
-max($x, $y)
-
-// Minimum value
-min($x, $y)
-
-// Power function
-pow($base, $exponent)
-
-// Square root
-sqrt($number)
-
-// Random number
-random()
-```
+| Function | Description | Parameters | Return Type |
+|----------|-------------|------------|------------|
+| `abs(num)` | Absolute value | `num: Number` | `Number` |
+| `ceil(num)` | Rounds up to nearest integer | `num: Number` | `Number` |
+| `floor(num)` | Rounds down to nearest integer | `num: Number` | `Number` |
+| `round(num, [decimals])` | Rounds to nearest integer or decimal places | `num: Number`, `decimals: Number (optional)` | `Number` |
+| `max(a, b)` | Maximum value | `a: Number`, `b: Number` | `Number` |
+| `min(a, b)` | Minimum value | `a: Number`, `b: Number` | `Number` |
+| `pow(base, exponent)` | Power function | `base: Number`, `exponent: Number` | `Number` |
+| `sqrt(num)` | Square root | `num: Number` | `Number` |
+| `random()` | Random number between 0 and 1 | none | `Number` |
+| `sin(angle)` | Sine of angle (in radians) | `angle: Number` | `Number` |
+| `cos(angle)` | Cosine of angle (in radians) | `angle: Number` | `Number` |
+| `tan(angle)` | Tangent of angle (in radians) | `angle: Number` | `Number` |
+| `log(value)` | Natural logarithm | `value: Number` | `Number` |
+| `log10(value)` | Base-10 logarithm | `value: Number` | `Number` |
+| `exp(value)` | e raised to the power | `value: Number` | `Number` |
 
 ## Logic Functions
 
-```java
-// Check if value is null
-isNull($value)
+| Function | Description | Parameters | Return Type |
+|----------|-------------|------------|------------|
+| `isNull(value)` | Checks if value is null | `value: Any` | `Boolean` |
+| `coalesce(value1, value2, ...)` | Returns first non-null value | `value1: Any`, `value2: Any`, ... | `Any` |
+| `isEmpty(value)` | Checks if value is empty | `value: Any` | `Boolean` |
+| `isNumber(value)` | Checks if value is a number | `value: Any` | `Boolean` |
+| `isString(value)` | Checks if value is a string | `value: Any` | `Boolean` |
+| `isBoolean(value)` | Checks if value is boolean | `value: Any` | `Boolean` |
+| `isList(value)` | Checks if value is a list | `value: Any` | `Boolean` |
+| `isMap(value)` | Checks if value is a map | `value: Any` | `Boolean` |
+| `equals(value1, value2)` | Checks if values are equal | `value1: Any`, `value2: Any` | `Boolean` |
+| `ifThen(condition, trueValue, falseValue)` | Conditional operator | `condition: Boolean`, `trueValue: Any`, `falseValue: Any` | `Any` |
 
-// Check if value is empty
-isEmpty($value)
+## Comparison Functions
 
-// Check if value is number
-isNumber($value)
+| Function | Description | Parameters | Return Type |
+|----------|-------------|------------|------------|
+| `greaterThan(a, b)` | Checks if a > b | `a: Number/String/Date`, `b: Number/String/Date` | `Boolean` |
+| `lessThan(a, b)` | Checks if a < b | `a: Number/String/Date`, `b: Number/String/Date` | `Boolean` |
+| `greaterThanOrEqual(a, b)` | Checks if a >= b | `a: Number/String/Date`, `b: Number/String/Date` | `Boolean` |
+| `lessThanOrEqual(a, b)` | Checks if a <= b | `a: Number/String/Date`, `b: Number/String/Date` | `Boolean` |
+| `strictEquals(a, b)` | Checks if a equals b (strict type check) | `a: Any`, `b: Any` | `Boolean` |
+| `notEquals(a, b)` | Checks if a is not equal to b | `a: Any`, `b: Any` | `Boolean` |
 
-// Check if value is string
-isString($value)
-
-// Check if value is boolean
-isBoolean($value)
-```
+> **Note:** In addition to comparison functions, you can now use logical operators (`&&`, `||`, `!`) directly in expressions for boolean operations. These operators treat `null` values as `false`.
 
 ## Date Functions
 
+| Function | Description | Parameters | Return Type |
+|----------|-------------|------------|------------|
+| `format(date, pattern)` | Format date | `date: LocalDate`, `pattern: String` | `String` |
+| `parseDate(str, pattern)` | Parse date string | `str: String`, `pattern: String` | `LocalDate` |
+| `now()` | Get current date | none | `LocalDate` |
+| `addDays(date, days)` | Add days to date | `date: LocalDate`, `days: Number` | `LocalDate` |
+| `dateDiff(date1, date2)` | Get days between dates | `date1: LocalDate`, `date2: LocalDate` | `Number` |
+| `addMonths(date, months)` | Add months to date | `date: LocalDate`, `months: Number` | `LocalDate` |
+| `addYears(date, years)` | Add years to date | `date: LocalDate`, `years: Number` | `LocalDate` |
+| `year(date)` | Get year from date | `date: LocalDate` | `Number` |
+| `month(date)` | Get month from date | `date: LocalDate` | `Number` |
+| `dayOfMonth(date)` | Get day of month from date | `date: LocalDate` | `Number` |
+
+## Collection Functions
+
+| Function | Description | Parameters | Return Type |
+|----------|-------------|------------|------------|
+| `size(collection)` | Get size of collection, string, or map | `collection: List/Map/String` | `Number` |
+| `first(list)` | Get first element of list | `list: List` | `Any` |
+| `last(list)` | Get last element of list | `list: List` | `Any` |
+| `subList(list, start, [end])` | Get subset of list | `list: List`, `start: Number`, `end: Number (optional)` | `List` |
+| `contains(collection, item)` | Check if collection contains item | `collection: List/Array/String`, `item: Any` | `Boolean` |
+
+The `contains` function works with different types of collections:
+
 ```java
-// Format date
-format($date, 'yyyy-MM-dd')
+// With strings
+contains("hello world", "world")    // true
+contains("hello world", "bye")      // false
 
-// Parse date string
-parseDate($string, 'yyyy-MM-dd')
+// With lists
+List<String> fruits = Arrays.asList("apple", "banana", "cherry");
+context.setVariable("fruits", fruits);
+contains($fruits, "banana")         // true
+contains($fruits, "kiwi")           // false
 
-// Get current date
-now()
+// With arrays
+Integer[] numbers = {1, 2, 3, 4, 5};
+context.setVariable("numbers", numbers);
+contains($numbers, 3)               // true
+contains($numbers, 10)              // false
 
-// Add days to date
-addDays($date, days)
-
-// Get date difference
-dateDiff($date1, $date2)
+// With null values
+contains($fruits, null)             // false if there are no null elements
+contains(null, "anything")          // false
 ```
+
+The `contains` function also handles numeric equality appropriately:
+
+```java
+// Numeric comparisons in contains
+List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5);
+context.setVariable("numbers", numbers);
+contains($numbers, 3)               // true for exact match
+contains($numbers, 3.0)             // true - numbers are compared by value, not type
+
+// Similarly, an array of integers will find a double value if numerically equal
+Integer[] numbersArray = {1, 2, 3, 4, 5};
+context.setVariable("numbersArray", numbersArray);
+contains($numbersArray, 3.0)         // true
+```
+
+## Utility Functions
+
+| Function | Description | Parameters | Return Type |
+|----------|-------------|------------|------------|
+| `typeof(value)` | Get type of value | `value: Any` | `String` |
+| `toString(value)` | Convert value to string | `value: Any` | `String` |
+| `toNumber(value)` | Convert value to number | `value: Any` | `Number` |
+| `toBoolean(value)` | Convert value to boolean | `value: Any` | `Boolean` |
 
 ## Custom Functions
 

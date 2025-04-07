@@ -179,3 +179,4 @@ temp/
 *~
 *.bak
 *.backup 
+.flattened-pom.xml

@@ -99,17 +99,88 @@ $x / $y
 $x % $y
 
 // Comparison operators
-$x == $y
-$x != $y
-$x > $y
-$x >= $y
-$x < $y
-$x <= $y
+$x > $y    // Greater than
+$x < $y    // Less than
+$x >= $y   // Greater than or equal to
+$x <= $y   // Less than or equal to
+$x == $y   // Equality
+$x != $y   // Inequality
 
 // Logical operators
-$x && $y
-$x || $y
-!$x
+$condition1 && $condition2  // Logical AND
+$condition1 || $condition2  // Logical OR
+!$condition  // Logical NOT
+```
+
+Comparison operators work with numbers, strings, and dates:
+
+```java
+// Numeric comparisons
+10 > 5                      // true
+5 < 10                      // true
+5 >= 5                      // true
+5 <= 5                      // true
+
+// String comparisons (lexicographic ordering)
+'banana' > 'apple'          // true
+'apple' < 'banana'          // true
+'banana' >= 'banana'        // true
+'apple' <= 'banana'         // true
+```
+
+In logical operations, Expresso follows "truthiness" rules similar to JavaScript:
+
+- `null` values are falsy (treated as `false` in logical expressions)
+- `Boolean` values behave as expected (`true` is truthy, `false` is falsy)
+- All other non-null values (numbers, strings, objects, arrays) are truthy
+
+This allows for concise null checking and logical expressions:
+
+```java
+// These evaluate to true
+!null
+true || null
+null || true
+!null && true
+"hello" && true     // Non-null non-boolean values are truthy
+42 || false         // Numbers are truthy
+
+// These evaluate to false
+null && true
+true && null
+null && null
+null || false
+false && "hello"    // Short-circuit makes this false
+```
+
+## Type Handling in Comparisons
+
+When comparing values of different types, Expresso follows these rules:
+
+```java
+// Number comparison - types are normalized for numeric comparisons
+5 == 5.0                   // true
+5 != 5.0                   // false
+10 > 5.0                   // true
+
+// String equality - type matters
+5 == "5"                   // false (different types)
+5 != "5"                   // true (different types)
+
+// Null comparisons
+$value == null             // true if $value is null
+$value != null             // true if $value is not null
+
+// Equality in comparisons with null
+null == null               // true
+"hello" == null            // false
+null != "hello"            // true
+
+// Ordering comparisons with null always return false
+null > 5                   // false
+5 > null                   // false
+null < 5                   // false
+5 < null                   // false
 ```
 
 ## Function Calls
@@ -137,7 +208,7 @@ Expresso follows standard operator precedence rules:
 4. Unary operators `!`, `-`
 5. Multiplicative operators `*`, `/`, `%`
 6. Additive operators `+`, `-`
-7. Relational operators `<`, `<=`, `>`, `>=`
+7. Relational operators `>`, `<`, `>=`, `<=`
 8. Equality operators `==`, `!=`
 9. Logical AND `&&`
 10. Logical OR `||`

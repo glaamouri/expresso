@@ -2,6 +2,7 @@ package com.expresso.ast;
 
 import com.expresso.context.Context;
 import com.expresso.exception.PropertyNotFoundException;
+import com.expresso.exception.VariableNotFoundException;
 
 /** AST node for variable references and property access */
 public class VariableExpression implements Expression {
@@ -35,29 +36,30 @@ public class VariableExpression implements Expression {
 
   @Override
   public Object evaluate(Context context) {
+    // Check if the variable exists in the context
+    boolean exists = context.variableExists(name);
     Object value = context.getVariable(name);
 
     // If there's no property path, handle the variable value directly
     if (propertyPath == null) {
-      if (value == null && !isNullSafe && !inSafeContext) {
-        throw new PropertyNotFoundException("Variable not found: " + name);
+      if (value == null && !exists && !isNullSafe && !inSafeContext) {
+        throw new VariableNotFoundException(name);
       }
       return value;
     }
 
     // If there is a property path, resolve it with null-safe handling
     try {
-      if (value == null && !isNullSafe && !inSafeContext) {
-        throw new PropertyNotFoundException("Variable not found: " + name);
+      if (value == null && !exists && !isNullSafe && !inSafeContext) {
+        throw new VariableNotFoundException(name);
       }
 
-        return context.resolveProperty(value, propertyPath, isNullSafe);
+      return context.resolveProperty(value, propertyPath, isNullSafe);
     } catch (PropertyNotFoundException e) {
-
       if (isNullSafe || inSafeContext) {
         return null;
       }
-      throw new PropertyNotFoundException("Property not found: " + name + "." + propertyPath, e);
+      throw e;
     }
   }
 

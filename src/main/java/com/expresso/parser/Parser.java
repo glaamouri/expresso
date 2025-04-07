@@ -19,7 +19,136 @@ public class Parser {
     }
 
     private Expression parseExpression() {
-        return parseAdditive();
+        return parseConditional();
+    }
+
+    private Expression parseConditional() {
+        Expression condition = parseLogicalOr();
+        skipWhitespace();
+        
+        if (position < input.length() && input.charAt(position) == '?') {
+            position++; // Skip ?
+            skipWhitespace();
+            
+            Expression trueExpr = parseLogicalOr(); // Parse the 'then' part
+            skipWhitespace();
+            
+            if (position >= input.length() || input.charAt(position) != ':') {
+                throw new SyntaxException("Expected ':' in conditional expression");
+            }
+            
+            position++; // Skip :
+            skipWhitespace();
+            
+            Expression falseExpr = parseLogicalOr(); // Parse the 'else' part
+            return new ConditionalExpression(condition, trueExpr, falseExpr);
+        }
+        
+        return condition;
+    }
+
+    private Expression parseLogicalOr() {
+        Expression left = parseLogicalAnd();
+        skipWhitespace();
+
+        while (position < input.length() - 1) {
+            // Check for OR operator ||
+            if (input.charAt(position) == '|' && input.charAt(position + 1) == '|') {
+                position += 2; // Skip ||
+                skipWhitespace();
+                Expression right = parseLogicalAnd();
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.OR);
+                skipWhitespace();
+            } else {
+                break;
+            }
+        }
+
+        return left;
+    }
+
+    private Expression parseLogicalAnd() {
+        Expression left = parseEquality();
+        skipWhitespace();
+
+        while (position < input.length() - 1) {
+            // Check for AND operator &&
+            if (input.charAt(position) == '&' && input.charAt(position + 1) == '&') {
+                position += 2; // Skip &&
+                skipWhitespace();
+                Expression right = parseEquality();
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.AND);
+                skipWhitespace();
+            } else {
+                break;
+            }
+        }
+
+        return left;
+    }
+
+    private Expression parseEquality() {
+        Expression left = parseRelational();
+        skipWhitespace();
+
+        while (position < input.length() - 1) {
+            // Check for equality operators == and !=
+            if (input.charAt(position) == '=' && input.charAt(position + 1) == '=') {
+                position += 2; // Skip ==
+                skipWhitespace();
+                Expression right = parseRelational();
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.EQUALS);
+                skipWhitespace();
+            } else if (input.charAt(position) == '!' && input.charAt(position + 1) == '=') {
+                position += 2; // Skip !=
+                skipWhitespace();
+                Expression right = parseRelational();
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.NOT_EQUALS);
+                skipWhitespace();
+            } else {
+                break;
+            }
+        }
+
+        return left;
+    }
+
+    private Expression parseRelational() {
+        Expression left = parseAdditive();
+        skipWhitespace();
+
+        while (position < input.length()) {
+            // Check for relational operators: >, <, >=, <=
+            if (position < input.length() - 1 && input.charAt(position) == '>' && input.charAt(position + 1) == '=') {
+                position += 2; // Skip >=
+                skipWhitespace();
+                Expression right = parseAdditive();
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.GREATER_THAN_OR_EQUAL);
+                skipWhitespace();
+            } else if (position < input.length() - 1 && input.charAt(position) == '<' && input.charAt(position + 1) == '=') {
+                position += 2; // Skip <=
+                skipWhitespace();
+                Expression right = parseAdditive();
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.LESS_THAN_OR_EQUAL);
+                skipWhitespace();
+            } else if (input.charAt(position) == '>') {
+                position++; // Skip >
+                skipWhitespace();
+                Expression right = parseAdditive();
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.GREATER_THAN);
+                skipWhitespace();
+            } else if (input.charAt(position) == '<') {
+                position++; // Skip <
+                skipWhitespace();
+                Expression right = parseAdditive();
+                left = new BinaryExpression(left, right, BinaryExpression.Operator.LESS_THAN);
+                skipWhitespace();
+            } else {
+                break;
+            }
+        }
+
+        return left;
     }
 
     private Expression parseAdditive() {
