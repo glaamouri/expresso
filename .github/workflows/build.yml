@@ -30,7 +30,7 @@ jobs:
       run: echo "BUILD_VERSION=1.1.0-PR-${{ github.event.pull_request.number }}-${GITHUB_SHA::7}" >> $GITHUB_ENV
     
     - name: Build with Maven
-      run: mvn -B clean verify -Pci-cd
+      run: mvn -B clean verify -Pci-cd -DskipTests
       
     - name: Test with Maven
       run: mvn -B test
