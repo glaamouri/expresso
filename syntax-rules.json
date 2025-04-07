@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "language": "Expresso",
-  "description": "Configuration for the Expresso expression language syntax to provide intellisense and validation.",
+  "description": "Description of the Expresso expression language syntax.",
   "operators": {
     "arithmetic": [
       {
