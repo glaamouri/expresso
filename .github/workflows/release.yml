@@ -30,14 +30,18 @@ jobs:
     - name: Set Release Version
       run: echo "RELEASE_VERSION=${{ github.event.inputs.release_version }}" >> $GITHUB_ENV
     
+    - name: Import GPG key
+      uses: crazy-max/ghaction-import-gpg@v5
+      with:
+        gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+        passphrase: ${{ secrets.GPG_PASSPHRASE }}
+    
     - name: Build with Maven
-      run: mvn -B clean package -Prelease -Dgpg.skip=true
+      run: mvn -B clean package -Prelease
     
     - name: Create GitHub Release
       id: create_release
       uses: softprops/action-gh-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: v${{ env.RELEASE_VERSION }}
         name: Release v${{ env.RELEASE_VERSION }}
@@ -47,7 +51,8 @@ jobs:
         
     - name: Publish to Maven Central
       if: success()
-      run: mvn -B deploy -Prelease -DskipTests -Dgpg.skip=true
+      run: mvn -B deploy -Prelease -DskipTests
       env:
         MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-        MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }} 
+        MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }} 
