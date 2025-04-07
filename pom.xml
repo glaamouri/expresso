@@ -126,28 +126,6 @@
                     <publishingServerId>central</publishingServerId>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.5</version>
-                <configuration>
-                    <skip>${gpg.skip}</skip>
-                    <gpgArguments>
-                        <arg>--pinentry-mode</arg>
-                        <arg>loopback</arg>
-                    </gpgArguments>
-                    <passphrase>${env.GPG_PASSPHRASE}</passphrase>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
     
@@ -174,12 +152,14 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.5</version>
+                        <version>3.1.0</version>
                         <configuration>
                             <gpgArguments>
                                 <arg>--pinentry-mode</arg>
                                 <arg>loopback</arg>
                             </gpgArguments>
+                            <keyname>${gpg.keyname}</keyname>
+                            <passphraseServerId>gpg.passphrase</passphraseServerId>
                             <passphrase>${env.GPG_PASSPHRASE}</passphrase>
                         </configuration>
                         <executions>
