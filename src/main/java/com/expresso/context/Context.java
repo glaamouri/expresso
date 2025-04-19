@@ -137,10 +137,11 @@ public class Context {
 
     // Handle array access notation
     // Check for null-safe array access
-    if (property.contains("?[") && property.endsWith("]")) {
+    if (property.contains("?[") && property.contains("]")) {
       int bracketIndex = property.indexOf("?[");
       String arrayProperty = bracketIndex > 0 ? property.substring(0, bracketIndex) : "";
-      String indexStr = property.substring(bracketIndex + 2, property.length() - 1);
+      int closingBracketIndex = property.indexOf("]", bracketIndex);
+      String indexStr = property.substring(bracketIndex + 2, closingBracketIndex);
       int index = Integer.parseInt(indexStr);
 
       // If there's no array property, use the target directly
@@ -152,28 +153,41 @@ public class Context {
       }
 
       // Then access the array element
+      Object element = null;
       if (array instanceof List) {
         List<?> list = (List<?>) array;
 
         if (index < 0 || index >= list.size()) {
           return null; // Null-safe access, return null instead of throwing
         }
-        return list.get(index);
+        element = list.get(index);
       } else if (array.getClass().isArray()) {
         int length = java.lang.reflect.Array.getLength(array);
         if (index < 0 || index >= length) {
           return null; // Null-safe access, return null instead of throwing
         }
-        return java.lang.reflect.Array.get(array, index);
+        element = java.lang.reflect.Array.get(array, index);
       } else {
         return null; // Null-safe access, return null instead of throwing
       }
+      
+      // Check if there are more properties to resolve after the array access
+      if (closingBracketIndex < property.length() - 1) {
+        String remainingProperty = property.substring(closingBracketIndex + 1);
+        if (remainingProperty.startsWith(".")) {
+          remainingProperty = remainingProperty.substring(1);
+        }
+        return resolveProperty(element, remainingProperty, isNullSafe);
+      }
+      
+      return element;
     }
     // Handle regular array access
-    else if (property.contains("[") && property.endsWith("]")) {
+    else if (property.contains("[") && property.contains("]")) {
       int bracketIndex = property.indexOf("[");
       String arrayProperty = bracketIndex > 0 ? property.substring(0, bracketIndex) : "";
-      String indexStr = property.substring(bracketIndex + 1, property.length() - 1);
+      int closingBracketIndex = property.indexOf("]", bracketIndex);
+      String indexStr = property.substring(bracketIndex + 1, closingBracketIndex);
       int index = Integer.parseInt(indexStr);
 
       // If there's no array property, use the target directly
@@ -188,6 +202,7 @@ public class Context {
       }
 
       // Then access the array element
+      Object element = null;
       if (array instanceof List) {
         List<?> list = (List<?>) array;
 
@@ -197,7 +212,7 @@ public class Context {
           }
           throw new ArrayIndexOutOfBoundsException(list, index, list.size());
         }
-        return list.get(index);
+        element = list.get(index);
       } else if (array.getClass().isArray()) {
         int length = java.lang.reflect.Array.getLength(array);
         if (index < 0 || index >= length) {
@@ -206,13 +221,24 @@ public class Context {
           }
           throw new ArrayIndexOutOfBoundsException(array, index, length);
         }
-        return java.lang.reflect.Array.get(array, index);
+        element = java.lang.reflect.Array.get(array, index);
       } else {
         if (isNullSafe) {
           return null;
         }
         throw new PropertyAccessException(array, property, "Cannot access index on non-array/list type");
       }
+      
+      // Check if there are more properties to resolve after the array access
+      if (closingBracketIndex < property.length() - 1) {
+        String remainingProperty = property.substring(closingBracketIndex + 1);
+        if (remainingProperty.startsWith(".")) {
+          remainingProperty = remainingProperty.substring(1);
+        }
+        return resolveProperty(element, remainingProperty, isNullSafe);
+      }
+      
+      return element;
     }
 
     // Handle regular property access

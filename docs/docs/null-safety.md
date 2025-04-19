@@ -66,26 +66,24 @@ The null-safe array access operator:
 - Returns null if the index is out of bounds
 - Can be combined with property access (`$person?.hobbies?[0]?.name`)
 
-## Current Limitations with Complex Property Paths
+## Working with Complex Property Paths
 
-There are some limitations with the current implementation of property access on array elements:
+Expresso supports complex property paths including array access with subsequent property access:
 
 ```java
-// Accessing properties on array elements may not work as expected in complex paths
-$company.departments[0].name  // This may throw a PropertyNotFoundException
+// Complex property paths with array access work seamlessly
+$company.departments[0].name  // Access the name of the first department
+$company.departments[1].employees[0].title  // Access the title of the first employee in the second department
 
-// Instead, use separate expressions or variables:
-// 1. First, get the department
-$dept = $company.departments[0]
-// 2. Then access its properties
-$dept.name
+// You can also use null-safe operators for complex paths
+$company?.departments?[0]?.employees?[0]?.skills?[0] ?? 'No skill'
 ```
 
-When working with complex property paths that include both array access and subsequent property access, you might encounter issues with the property path parser. As a workaround:
+When working with complex property paths, particularly those that involve arrays and deeply nested structures:
 
-1. Use separate expressions to retrieve array elements first
-2. Then access properties on the retrieved elements
-3. Alternatively, consider using the null-safe versions of operators even if you believe the values won't be null
+1. Use null-safe operators (`?.` and `?[]`) when there's any chance that a value in the path might be null
+2. Provide default values using the null coalescing operator (`??`) for important values
+3. Consider breaking very complex paths into multiple expressions for better readability and error handling
 
 ## Null Coalescing Operator (`??`)
 
@@ -138,14 +136,8 @@ These operators are particularly powerful when combined:
 $person?.address?.city ?? 'Unknown City'
 $person?.hobbies?[0] ?? 'No Hobby'
 
-// For complex paths with array access, use intermediary steps:
-// Instead of this (which might not work reliably):
-// $orders?[0]?.items?[0]?.productName ?? 'No Product'
-
-// Do this:
-$firstOrder = $orders?[0]
-$firstItem = $firstOrder?.items?[0]
-$productName = $firstItem?.productName ?? 'No Product'
+// With complex paths including array access
+$orders?[0]?.items?[0]?.productName ?? 'No Product'
 
 // Combining with logical operations
 $user?.profile?.isVerified && $user?.subscription?.isActive
@@ -198,14 +190,13 @@ String firstHobby = (String) evaluator.evaluate("$person?.hobbies?[0] ?? 'Unknow
 ### Chained Operations
 
 ```java
-// For complex expressions with array access, break them into steps
-// Instead of:
-// String result = evaluator.evaluate("$user?.orders?[0]?.items?[0]?.product?.name ?? 'No Product'", context);
+// Complex expressions with array access work reliably
+String result = evaluator.evaluate("$user?.orders?[0]?.items?[0]?.product?.name ?? 'No Product'", context);
 
-// Do this:
+// You can also break complex expressions into steps for clarity
 context.setVariable("firstOrder", evaluator.evaluate("$user?.orders?[0]", context));
 context.setVariable("firstItem", evaluator.evaluate("$firstOrder?.items?[0]", context));
-String result = (String) evaluator.evaluate("$firstItem?.product?.name ?? 'No Product'", context);
+String productName = (String) evaluator.evaluate("$firstItem?.product?.name ?? 'No Product'", context);
 ```
 
 ### Logical Operations with Null
