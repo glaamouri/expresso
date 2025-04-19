@@ -18,6 +18,7 @@ sidebar_position: 2
 - **Custom Functions**: Define your own functions easily
 - **Error Handling**: Comprehensive error reporting
 - **Lightweight**: Zero external dependencies
+- **Expression Validation**: Validate expressions with detailed error information
 
 ## Installation
 
@@ -88,6 +89,97 @@ String result8 = (String) evaluator.evaluate("$person?.nonExistent?.property ?? 
 // result8 = "Default"
 ```
 
+## Validating Expressions
+
+Expresso provides powerful validation capabilities to check expressions before evaluation:
+
+### Basic Validation
+
+The simplest way to validate expressions:
+
+```java
+// Simple validation (returns boolean)
+boolean isValidSyntax = evaluator.validate("$age >= 18 ? 'Adult' : 'Minor'");
+// isValidSyntax = true
+
+boolean isValid = evaluator.validate("$age >= 18", context);
+// isValid = true
+```
+
+### Enhanced Validation with Detailed Error Information
+
+For more detailed validation with rich error information:
+
+```java
+import com.expresso.validation.ValidationResult;
+import com.expresso.validation.ExpressionError;
+
+// Validate syntax only
+ValidationResult syntaxResult = evaluator.validateSyntax("1 + 2 * (3 - ");
+if (!syntaxResult.isValid()) {
+    ExpressionError error = syntaxResult.getFirstError();
+    System.err.println(error.getErrorType() + ": " + error.getMessage());
+    
+    // Get error location information
+    if (error.getLocation() != null) {
+        System.err.println("Error at position: " + error.getLocation().getStartPosition());
+        System.err.println("Error snippet: " + error.getLocation().getErrorSnippet());
+    }
+}
+
+// Validate with context (checks both syntax and variable existence)
+Context context = new Context();
+context.setVariable("age", 25);
+
+ValidationResult contextResult = evaluator.validateWithContext("$salary > 5000", context);
+if (!contextResult.isValid()) {
+    // Get all validation errors
+    for (ExpressionError error : contextResult.getErrors()) {
+        System.err.println(error.getErrorType() + ": " + error.getMessage());
+    }
+    
+    // Or just get the first error
+    ExpressionError firstError = contextResult.getFirstError();
+    System.err.println(firstError);
+}
+```
+
+### Error Types
+
+Different types of validation errors that can be detected:
+
+- **SyntaxError**: Invalid expression syntax (e.g., unbalanced parentheses, unterminated strings)
+- **VariableNotFoundError**: Reference to a variable that doesn't exist in the context
+- **PropertyNotFoundError**: Attempt to access a property that doesn't exist
+- **EvaluationError**: General error during expression evaluation
+
+### Handling User Input Safely
+
+Validation is ideal for handling user-provided expressions:
+
+```java
+// User input validation example
+String userExpression = getUserInput();
+ValidationResult result = evaluator.validateWithContext(userExpression, context);
+
+if (result.isValid()) {
+    // Safe to evaluate
+    Object value = evaluator.evaluate(userExpression, context);
+    displayResult(value);
+} else {
+    // Show detailed error information to the user
+    ExpressionError error = result.getFirstError();
+    showErrorToUser(error.getErrorType(), error.getMessage());
+    
+    // Highlight the problematic part of the expression
+    if (error.getLocation() != null) {
+        highlightError(userExpression, 
+                      error.getLocation().getStartPosition(), 
+                      error.getLocation().getEndPosition());
+    }
+}
+```
+
 ## Custom Functions
 
 You can extend Expresso with your own custom functions:
@@ -149,6 +241,15 @@ String city = (String) evaluator.evaluate(
     context
 );
 // city will be "Unknown" if person or address is null
+
+// Or use validation to check expressions before evaluation
+ValidationResult result = evaluator.validateWithContext("$person.address.city", context);
+if (!result.isValid()) {
+    // Handle invalid expression
+    city = "Unknown";
+} else {
+    city = (String) evaluator.evaluate("$person.address.city", context);
+}
 ```
 
 ## Supported Data Types

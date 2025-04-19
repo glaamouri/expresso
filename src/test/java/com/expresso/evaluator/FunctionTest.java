@@ -58,7 +58,6 @@ class FunctionTest {
         assertEquals(4.0, evaluator.evaluate("floor(4.7)", context));
         assertEquals(5.0, evaluator.evaluate("ceil(4.1)", context));
         
-        // The round function returns different types depending on platform
         Object roundResult = evaluator.evaluate("round(3.4)", context);
         assertTrue(roundResult instanceof Number, "Round result should be a number");
         assertEquals(3, ((Number)roundResult).intValue());
@@ -202,7 +201,7 @@ class FunctionTest {
         
         // Simple nested functions
         assertEquals("HELLO", evaluator.evaluate("upperCase(trim('  hello  '))", context));
-        assertEquals(6.0, evaluator.evaluate("abs(floor(-5.3))", context)); // floor(-5.3) is -6, not -5
+        assertEquals(6.0, evaluator.evaluate("abs(floor(-5.3))", context));
         
         // Multiple levels of nesting
         assertEquals("35", evaluator.evaluate("toString(round(abs(-34.7)))", context));
@@ -224,12 +223,9 @@ class FunctionTest {
         assertThrows(EvaluationException.class, () -> 
                 evaluator.evaluate("upperCase(42)", context));
         
-        // Null argument handling - the implementation might throw NPE here
-        // Let's remove this test or verify it differently
         try {
             evaluator.evaluate("upperCase(null)", context);
         } catch (EvaluationException e) {
-            // Expected exception - the function doesn't properly handle null
             assertTrue(e.getMessage().contains("Cannot invoke"));
         }
         

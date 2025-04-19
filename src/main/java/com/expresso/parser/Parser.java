@@ -34,7 +34,7 @@ public class Parser {
             skipWhitespace();
             
             if (position >= input.length() || input.charAt(position) != ':') {
-                throw new SyntaxException("Expected ':' in conditional expression");
+                throw new SyntaxException("Expected ':' in conditional expression", position);
             }
             
             position++; // Skip :
@@ -219,7 +219,7 @@ public class Parser {
         skipWhitespace();
 
         if (position >= input.length()) {
-            throw new SyntaxException("Unexpected end of expression");
+            throw new SyntaxException("Unexpected end of expression", position);
         }
 
         char c = input.charAt(position);
@@ -268,7 +268,7 @@ public class Parser {
                 return new LiteralExpression(null);
             }
 
-            throw new SyntaxException("Invalid identifier: " + value);
+            throw new SyntaxException("Invalid identifier: " + value, start);
         }
 
         // Handle parenthesized expressions
@@ -279,14 +279,14 @@ public class Parser {
             skipWhitespace();
             
             if (position >= input.length() || input.charAt(position) != ')') {
-                throw new SyntaxException("Expected ')' after expression");
+                throw new SyntaxException("Expected ')' after expression", position);
             }
             position++; // Skip )
             
             return expr;
         }
 
-        throw new SyntaxException("Unexpected character: " + c);
+        throw new SyntaxException("Unexpected character: " + c, position);
     }
 
     private Expression parseStringLiteral() {
@@ -323,7 +323,7 @@ public class Parser {
             }
         }
 
-        throw new SyntaxException("Unterminated string literal");
+        throw new SyntaxException("Unterminated string literal", position);
     }
 
     private Expression parseNumberLiteral() {
@@ -338,7 +338,7 @@ public class Parser {
             char c = input.charAt(position);
             if (c == '.') {
                 if (isDecimal) {
-                    throw new SyntaxException("Invalid number format");
+                    throw new SyntaxException("Invalid number format", position);
                 }
                 isDecimal = true;
                 position++;
@@ -357,7 +357,7 @@ public class Parser {
                 return new LiteralExpression(Long.parseLong(numberStr));
             }
         } catch (NumberFormatException e) {
-            throw new SyntaxException("Invalid number format: " + numberStr);
+            throw new SyntaxException("Invalid number format: " + numberStr, position);
         }
     }
 
@@ -462,7 +462,7 @@ public class Parser {
 
                         // Parse the array index
                         if (!Character.isDigit(input.charAt(position)) && input.charAt(position) != '-') {
-                            throw new SyntaxException("Array index must be a number");
+                            throw new SyntaxException("Array index must be a number", position);
                         }
                         start = position;
                         while (position < input.length() && Character.isDigit(input.charAt(position))) {
@@ -472,7 +472,7 @@ public class Parser {
                         skipWhitespace();
 
                         if (position >= input.length() || input.charAt(position) != ']') {
-                            throw new SyntaxException("Expected ']' after array index");
+                            throw new SyntaxException("Expected ']' after array index", position);
                         }
                         propertyPathBuilder.append(']');
                         position++; // Skip ]
@@ -485,7 +485,7 @@ public class Parser {
 
                         // Parse the array index
                         if (!Character.isDigit(input.charAt(position)) && input.charAt(position) != '-') {
-                            throw new SyntaxException("Array index must be a number");
+                            throw new SyntaxException("Array index must be a number", position);
                         }
                         start = position;
                         while (position < input.length() && Character.isDigit(input.charAt(position))) {
@@ -495,7 +495,7 @@ public class Parser {
                         skipWhitespace();
 
                         if (position >= input.length() || input.charAt(position) != ']') {
-                            throw new SyntaxException("Expected ']' after array index");
+                            throw new SyntaxException("Expected ']' after array index", position);
                         }
                         propertyPathBuilder.append(']');
                         position++; // Skip ]
@@ -527,7 +527,7 @@ public class Parser {
 
                 // Parse the array index
                 if (!Character.isDigit(input.charAt(position)) && input.charAt(position) != '-') {
-                    throw new SyntaxException("Array index must be a number");
+                    throw new SyntaxException("Array index must be a number", position);
                 }
                 int start = position;
                 while (position < input.length() && Character.isDigit(input.charAt(position))) {
@@ -537,7 +537,7 @@ public class Parser {
                 skipWhitespace();
 
                 if (position >= input.length() || input.charAt(position) != ']') {
-                    throw new SyntaxException("Expected ']' after array index");
+                    throw new SyntaxException("Expected ']' after array index", position);
                 }
                 propertyPathBuilder.append(']');
                 position++; // Skip ]
@@ -550,7 +550,7 @@ public class Parser {
 
                 // Parse the array index
                 if (!Character.isDigit(input.charAt(position)) && input.charAt(position) != '-') {
-                    throw new SyntaxException("Array index must be a number");
+                    throw new SyntaxException("Array index must be a number", position);
                 }
                 int start = position;
                 while (position < input.length() && Character.isDigit(input.charAt(position))) {
@@ -560,7 +560,7 @@ public class Parser {
                 skipWhitespace();
 
                 if (position >= input.length() || input.charAt(position) != ']') {
-                    throw new SyntaxException("Expected ']' after array index");
+                    throw new SyntaxException("Expected ']' after array index", position);
                 }
                 propertyPathBuilder.append(']');
                 position++; // Skip ]
@@ -640,7 +640,7 @@ public class Parser {
 
                         // Parse the array index
                         if (!Character.isDigit(input.charAt(position)) && input.charAt(position) != '-') {
-                            throw new SyntaxException("Array index must be a number");
+                            throw new SyntaxException("Array index must be a number", position);
                         }
                         start = position;
                         while (position < input.length() && Character.isDigit(input.charAt(position))) {
@@ -650,7 +650,7 @@ public class Parser {
                         skipWhitespace();
 
                         if (position >= input.length() || input.charAt(position) != ']') {
-                            throw new SyntaxException("Expected ']' after array index");
+                            throw new SyntaxException("Expected ']' after array index", position);
                         }
                         propertyPathBuilder.append(']');
                         position++; // Skip ]
@@ -663,7 +663,7 @@ public class Parser {
 
                         // Parse the array index
                         if (!Character.isDigit(input.charAt(position)) && input.charAt(position) != '-') {
-                            throw new SyntaxException("Array index must be a number");
+                            throw new SyntaxException("Array index must be a number", position);
                         }
                         start = position;
                         while (position < input.length() && Character.isDigit(input.charAt(position))) {
@@ -673,7 +673,7 @@ public class Parser {
                         skipWhitespace();
 
                         if (position >= input.length() || input.charAt(position) != ']') {
-                            throw new SyntaxException("Expected ']' after array index");
+                            throw new SyntaxException("Expected ']' after array index", position);
                         }
                         propertyPathBuilder.append(']');
                         position++; // Skip ]
@@ -726,7 +726,7 @@ public class Parser {
         skipWhitespace();
 
         if (position >= input.length() || input.charAt(position) != '(') {
-            throw new SyntaxException("Expected '(' after function name");
+            throw new SyntaxException("Expected '(' after function name", position);
         }
         position++; // Skip (
 
@@ -748,7 +748,7 @@ public class Parser {
             }
         }
 
-        throw new SyntaxException("Unterminated function call");
+        throw new SyntaxException("Unterminated function call", position);
     }
 
     private void skipWhitespace() {

@@ -1,7 +1,6 @@
 package com.expresso.ast;
 
 import com.expresso.context.Context;
-import com.expresso.exception.EvaluationException;
 
 /**
  * Represents a unary expression (e.g., -$a, !$b).

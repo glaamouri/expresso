@@ -22,7 +22,6 @@ public class FunctionExpression implements Expression {
     if ("isNull".equals(name)) {
       // We want isNull to return true for nonexistent variables
       if (arguments.size() == 1 && arguments.get(0) instanceof VariableExpression) {
-        VariableExpression varExpr = (VariableExpression) arguments.get(0);
         try {
           Object value = arguments.get(0).evaluate(context);
           return value == null;
