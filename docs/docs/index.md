@@ -4,22 +4,29 @@ title: Overview
 sidebar_position: 1
 ---
 
-# Expresso - Java Expression Evaluator
+# Expresso - Dynamic Expression Evaluator
 
-Expresso is a lightweight, zero-dependency Java expression evaluator library that allows you to evaluate dynamic expressions in your Java applications.
+Expresso is a lightweight, zero-dependency Java expression evaluator library designed for dynamically evaluating expressions in your applications. Whether you need to evaluate user-defined formulas, content stored in databases, or rule-based calculations, Expresso provides a powerful engine to safely evaluate dynamic expressions with contextual data.
 
-## Features
+## Key Features
 
-- Zero external dependencies - pure Java implementation
-- Simple and intuitive expression syntax
-- Support for variables, literals, and function calls
-- Property access on objects and collections
-- Null-safe property access and array access
-- Null coalescing operator for default values
-- Built-in string, math, and logic functions
-- Custom function registration
-- Type-safe evaluation
-- Comprehensive error handling
+- **Dynamic Evaluation**: Evaluate expressions written by users or stored in databases
+- **Context-Driven**: Calculate results based on supplied context variables
+- **Zero Dependencies**: Pure Java implementation with no external libraries
+- **Type-Safe**: Strong type checking ensures reliable results
+- **Null Safety**: Safely handle null values with specialized operators
+- **Security**: Validate expressions before evaluation
+- **Extensible**: Add custom functions to meet your specific needs
+- **Comprehensive Error Handling**: Detailed error reporting
+
+## Use Cases
+
+- **User-Defined Formulas**: Allow end-users to define custom calculations
+- **Rule Engines**: Implement business rules stored in databases
+- **Dynamic Content**: Generate content based on contextual variables
+- **Configurable Workflows**: Create configurable business processes
+- **Data Transformation**: Transform data using dynamic rules
+- **Template Engines**: Enhance templates with expression evaluation
 
 ## Quick Start
 
@@ -29,7 +36,7 @@ Add Expresso to your project using Maven:
 <dependency>
     <groupId>work.ghassen</groupId>
     <artifactId>expresso</artifactId>
-    <version>1.0.0</version>
+    <version>{latestStable.version}</version>
 </dependency>
 ```
 

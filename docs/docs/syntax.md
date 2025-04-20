@@ -1,7 +1,7 @@
 ---
 id: syntax
 title: Expression Syntax
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Expression Syntax
@@ -213,3 +213,69 @@ Expresso follows standard operator precedence rules:
 9. Logical AND `&&`
 10. Logical OR `||`
 11. Null coalescing operator `??` 
+
+## Advanced Operators
+
+### Short-Circuit Evaluation
+
+Logical operators use short-circuit evaluation, meaning they only evaluate the right side when necessary:
+- `&&` only evaluates the right expression if the left expression is true
+- `||` only evaluates the right expression if the left expression is false
+
+```java
+// Setup context
+Context context = new Context();
+context.setVariable("age", 25);
+context.setVariable("name", "Alice");
+context.setVariable("isStudent", true);
+context.setVariable("minAge", 18);
+context.setVariable("maxAge", 30);
+
+// Comparison operators
+boolean isAdult = (Boolean) evaluator.evaluate("$age >= $minAge", context);
+// true
+
+boolean nameCheck = (Boolean) evaluator.evaluate("$name == 'Alice'", context);
+// true
+
+// Logical operators
+boolean complexCheck = (Boolean) evaluator.evaluate(
+    "$age >= $minAge && $age <= $maxAge && ($isStudent || $name == 'Alice')",
+    context
+);
+// true
+
+// Short circuit evaluation
+Object result = evaluator.evaluate("false && unknownFunction()", context);
+// Returns false without evaluating unknownFunction()
+```
+
+### Conditional (Ternary) Operator
+
+Expresso supports the conditional (ternary) operator, similar to the `?:` operator in Java:
+
+```java
+$condition ? $trueValue : $falseValue
+```
+
+This operator evaluates `$condition` and returns `$trueValue` if the condition is true, or `$falseValue` if the condition is false.
+
+```java
+// Basic conditionals
+Object result = evaluator.evaluate("$age >= 18 ? 'Adult' : 'Minor'", context);
+// Returns "Adult" if age is 18 or greater, otherwise "Minor"
+
+// Ternary with expressions on both sides
+Object discount = evaluator.evaluate(
+    "$isStudent ? $price * 0.8 : $price * 0.95", 
+    context
+);
+// Returns price with 20% off if student, otherwise 5% off
+
+// Nested ternary
+Object category = evaluator.evaluate(
+    "$age < 13 ? 'Child' : ($age < 20 ? 'Teenager' : 'Adult')",
+    context
+);
+// Returns categorization based on age
+``` 

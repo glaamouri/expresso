@@ -7,6 +7,11 @@ module.exports = {
     },
     {
       type: 'doc',
+      id: 'core-concepts',
+      label: 'Core Concepts',
+    },
+    {
+      type: 'doc',
       id: 'getting-started',
       label: 'Getting Started',
     },
@@ -18,7 +23,7 @@ module.exports = {
     {
       type: 'doc',
       id: 'null-safety',
-      label: 'Null-Safety Operators',
+      label: 'Null Safety',
     },
     {
       type: 'doc',
@@ -35,5 +40,25 @@ module.exports = {
       id: 'examples',
       label: 'Examples',
     },
+    {
+      type: 'doc',
+      id: 'use-cases',
+      label: 'Use Cases',
+    },
+    {
+      type: 'doc',
+      id: 'security',
+      label: 'Security Best Practices',
+    },
+    {
+      type: 'doc',
+      id: 'quick-reference',
+      label: 'Quick Reference',
+    },
+    {
+      type: 'doc',
+      id: 'contribution',
+      label: 'Contributing',
+    }
   ],
 }; 

@@ -1,7 +1,7 @@
 ---
 id: error-handling
 title: Error Handling
-sidebar_position: 5
+sidebar_position: 7
 ---
 
 # Error Handling
@@ -150,84 +150,6 @@ try {
     System.err.println("Array: " + e.getArray());
     System.err.println("Index: " + e.getIndex());
     System.err.println("Size: " + e.getSize());
-}
-```
-
-## Known Limitations with Complex Property Paths
-
-When working with complex property paths, especially those involving arrays and nested objects, there are some limitations to be aware of:
-
-### Complex Path Limitations
-
-The evaluator may encounter difficulties when evaluating complex property paths with multiple array accesses or deeply nested structures. For example:
-
-```java
-// This may throw PropertyNotFoundException even when the objects exist
-try {
-    evaluator.evaluate("$company.departments[0].employees[0].name", context);
-} catch (PropertyNotFoundException e) {
-    System.err.println("Complex path error: " + e.getMessage());
-}
-```
-
-### Best Practices for Handling Complex Paths
-
-To work around limitations with complex property paths, consider breaking down complex expressions into simpler steps:
-
-```java
-// Instead of accessing a deep path in one go:
-// $company.departments[0].employees[0].name
-
-// Break it down into steps:
-Object department = evaluator.evaluate("$company.departments[0]", context);
-context.setVariable("department", department);
-
-Object employee = evaluator.evaluate("$department.employees[0]", context);
-context.setVariable("employee", employee);
-
-Object name = evaluator.evaluate("$employee.name", context);
-```
-
-Or use temporary variables in your expressions:
-
-```java
-// Using temporary variables in expressions
-Object result = evaluator.evaluate("{ " +
-    "let dept = $company.departments[0]; " +
-    "let emp = dept.employees[0]; " +
-    "return emp.name; " +
-    "}", context);
-```
-
-### Using Null-Safe Access with Complex Paths
-
-When working with complex paths, always use null-safe operators to prevent exceptions:
-
-```java
-// Using null-safe access for complex paths
-Object result = evaluator.evaluate("$company?.departments?[0]?.employees?[0]?.name", context);
-
-// With a default value
-Object result = evaluator.evaluate("$company?.departments?[0]?.employees?[0]?.name ?? 'Unknown'", context);
-```
-
-### Testing Complex Paths
-
-When testing expressions that use complex property paths:
-
-1. First verify that individual parts of the path exist and are not null
-2. Check the types of intermediate objects to ensure they match your expectations
-3. Use defensive programming with null checks and type validations
-
-```java
-// Verify each part of a complex path
-boolean hasDepartments = (boolean) evaluator.evaluate("$company != null && $company.departments != null", context);
-boolean hasFirstDept = hasDepartments && (boolean) evaluator.evaluate("$company.departments.size() > 0", context);
-boolean hasEmployees = hasFirstDept && (boolean) evaluator.evaluate("$company.departments[0].employees != null", context);
-
-// Only attempt to access the full path if all parts exist
-if (hasEmployees) {
-    Object name = evaluator.evaluate("$company.departments[0].employees[0].name", context);
 }
 ```
 

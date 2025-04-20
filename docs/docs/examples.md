@@ -1,7 +1,7 @@
 ---
 id: examples
 title: Examples
-sidebar_position: 7
+sidebar_position: 8
 ---
 
 # Examples
@@ -445,4 +445,61 @@ Boolean eligible = (Boolean) evaluator.evaluate(
     ")",
     context
 ); // true
-``` 
+```
+
+## Testing Utilities
+
+### ObjectBuilder for Creating Test Data
+
+When testing Expresso expressions, you'll often need to create complex object graphs. The `ObjectBuilder` utility makes this easy with a fluent API:
+
+```java
+import com.expresso.util.ObjectBuilder;
+
+// Create a simple object
+Map<String, Object> simpleObject = ObjectBuilder.create()
+    .set("name", "Alice")
+    .set("age", 25)
+    .set("isStudent", true)
+    .build();
+
+// Create a complex nested object
+Map<String, Object> complexObject = ObjectBuilder.create()
+    .set("id", 1001)
+    .set("name", "John Doe")
+    .object("address")
+        .set("street", "123 Main St")
+        .set("city", "New York")
+        .set("state", "NY")
+        .set("zip", 10001)
+        .end()
+    .list("hobbies")
+        .add("reading")
+        .add("gaming")
+        .add("hiking")
+        .end()
+    .object("account")
+        .set("id", "ACC-1001")
+        .set("active", true)
+        .list("transactions")
+            .addObject()
+                .set("id", "TRX-001")
+                .set("amount", 150.75)
+                .set("date", java.time.LocalDate.of(2023, 5, 10))
+                .end()
+            .addObject()
+                .set("id", "TRX-002")
+                .set("amount", 50.25)
+                .set("date", java.time.LocalDate.of(2023, 5, 15))
+                .end()
+            .end()
+        .end()
+    .build();
+
+// Use with Expresso
+context.setVariable("user", complexObject);
+String city = (String) evaluator.evaluate("$user.address.city", context);
+// Returns "New York"
+```
+
+This utility makes it much easier to build complex object graphs for testing your expressions, without having to create numerous Java bean classes. 

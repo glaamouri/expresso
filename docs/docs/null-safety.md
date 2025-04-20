@@ -1,7 +1,7 @@
 ---
 id: null-safety
-title: Null-Safety Operators
-sidebar_position: 3.5
+title: Null Safety
+sidebar_position: 5
 ---
 
 # Null-Safety Operators
