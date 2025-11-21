@@ -177,4 +177,58 @@ public class CollectionFunctions implements FunctionProvider {
             return list;
         });
     }
+
+    @Override
+    public List<FunctionInfo> getFunctionInfo() {
+        return List.of(
+                FunctionInfo.builder("size")
+                        .description("Returns the size of a collection, array, or string")
+                        .parameter("collection", "List|Array|Map|String", "The collection to measure")
+                        .returnType("Integer")
+                        .build(),
+
+                FunctionInfo.builder("first")
+                        .description("Returns the first element of a list or array")
+                        .parameter("collection", "List|Array", "The collection")
+                        .returnType("Object")
+                        .build(),
+
+                FunctionInfo.builder("last")
+                        .description("Returns the last element of a list or array")
+                        .parameter("collection", "List|Array", "The collection")
+                        .returnType("Object")
+                        .build(),
+
+                FunctionInfo.builder("subList")
+                        .description("Returns a sublist from start index to end index")
+                        .parameter("collection", "List|Array", "The source collection")
+                        .parameter("start", "Integer", "The start index (inclusive)")
+                        .parameter("end", "Integer", "The end index (exclusive, optional)")
+                        .returnType("List")
+                        .build(),
+
+                FunctionInfo.builder("sum")
+                        .description("Returns the sum of all numbers in a collection")
+                        .parameter("collection", "List|Array", "The collection of numbers")
+                        .returnType("Number")
+                        .build(),
+
+                FunctionInfo.builder("avg")
+                        .description("Returns the average of all numbers in a collection")
+                        .parameter("collection", "List|Array", "The collection of numbers")
+                        .returnType("Number")
+                        .build(),
+
+                FunctionInfo.builder("sort")
+                        .description("Returns a sorted copy of the collection")
+                        .parameter("collection", "List|Array", "The collection to sort")
+                        .returnType("List")
+                        .build(),
+
+                FunctionInfo.builder("reverse")
+                        .description("Returns a reversed copy of the collection")
+                        .parameter("collection", "List|Array", "The collection to reverse")
+                        .returnType("List")
+                        .build());
+    }
 }

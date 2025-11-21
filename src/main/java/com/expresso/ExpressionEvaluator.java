@@ -15,7 +15,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Main entry point for the expression evaluator library. Provides methods to parse and evaluate
+ * Main entry point for the expression evaluator library. Provides methods to
+ * parse and evaluate
  * expressions.
  */
 public class ExpressionEvaluator {
@@ -40,9 +41,10 @@ public class ExpressionEvaluator {
   /**
    * Registers a custom function that can be used in expressions.
    *
-   * @param name The name of the function as it will be used in expressions
-   * @param function The function implementation that takes an array of arguments and returns a
-   *     result
+   * @param name     The name of the function as it will be used in expressions
+   * @param function The function implementation that takes an array of arguments
+   *                 and returns a
+   *                 result
    */
   public void registerFunction(String name, Function<Object[], Object> function) {
     customFunctions.put(name, function);
@@ -52,7 +54,7 @@ public class ExpressionEvaluator {
    * Directly evaluates an expression string with the given context
    *
    * @param expression The expression string to evaluate
-   * @param context The context containing variables and functions
+   * @param context    The context containing variables and functions
    * @return The evaluation result
    * @throws EvaluationException if evaluation fails
    */
@@ -68,7 +70,7 @@ public class ExpressionEvaluator {
    * Evaluates a previously parsed expression with the given context
    *
    * @param expression The parsed Expression AST
-   * @param context The context containing variables and functions
+   * @param context    The context containing variables and functions
    * @return The evaluation result
    * @throws EvaluationException if evaluation fails
    */
@@ -78,35 +80,40 @@ public class ExpressionEvaluator {
 
     return expression.evaluate(context);
   }
-  
+
   /**
-   * Validates if an expression has valid syntax, without checking variable existence.
+   * Validates if an expression has valid syntax, without checking variable
+   * existence.
    * 
    * @param expression The expression string to validate
    * @return true if the expression has valid syntax, false otherwise
-   * @deprecated Use {@link #validateSyntax(String)} instead for more detailed error information
+   * @deprecated Use {@link #validateSyntax(String)} instead for more detailed
+   *             error information
    */
   @Deprecated
   public boolean validate(String expression) {
     ValidationResult result = validateSyntax(expression);
     return result.isValid();
   }
-  
+
   /**
    * Validates if an expression is valid with the given context.
    * This checks both syntax and variable/function references.
    *
    * @param expression The expression string to validate
-   * @param context The context containing variables and functions to check against
-   * @return true if the expression is valid with the given context, false otherwise
-   * @deprecated Use {@link #validateWithContext(String, Context)} instead for more detailed error information
+   * @param context    The context containing variables and functions to check
+   *                   against
+   * @return true if the expression is valid with the given context, false
+   *         otherwise
+   * @deprecated Use {@link #validateWithContext(String, Context)} instead for
+   *             more detailed error information
    */
   @Deprecated
   public boolean validate(String expression, Context context) {
     ValidationResult result = validateWithContext(expression, context);
     return result.isValid();
   }
-  
+
   /**
    * Validates the syntax of an expression without checking variable existence.
    * 
@@ -122,8 +129,8 @@ public class ExpressionEvaluator {
       ExpressionError error;
       if (e.getPosition() >= 0) {
         ExpressionError.ErrorLocation location = new ExpressionError.ErrorLocation(
-            e.getPosition(), 
-            Math.min(e.getPosition() + 10, expression.length()), 
+            e.getPosition(),
+            Math.min(e.getPosition() + 10, expression.length()),
             expression);
         error = new ExpressionError("SyntaxError", e.getMessage(), location);
       } else {
@@ -136,13 +143,14 @@ public class ExpressionEvaluator {
       return ValidationResult.failure(error);
     }
   }
-  
+
   /**
    * Validates if an expression is valid with the given context.
    * This checks both syntax and variable/function references.
    *
    * @param expression The expression string to validate
-   * @param context The context containing variables and functions to check against
+   * @param context    The context containing variables and functions to check
+   *                   against
    * @return A ValidationResult object containing the result of the validation
    */
   public ValidationResult validateWithContext(String expression, Context context) {
@@ -151,74 +159,102 @@ public class ExpressionEvaluator {
     if (!syntaxResult.isValid()) {
       return syntaxResult;
     }
-    
+
     try {
       // Parse the expression
       Expression parsed = parse(expression);
-      
+
       // Register custom functions with the context for validation
       customFunctions.forEach(context::registerFunction);
-      
+
       try {
         // Try to evaluate the expression
         parsed.evaluate(context);
         return ValidationResult.success();
       } catch (VariableNotFoundException e) {
-        // Special handling for null-safe access - check if the expression uses ?. or ?[ 
+        // Special handling for null-safe access - check if the expression uses ?. or ?[
         if (expression.contains("?.") || expression.contains("?[")) {
           String varName = e.getVariableName();
-          // If the expression has null-safe operators followed by the variable, consider it valid
+          // If the expression has null-safe operators followed by the variable, consider
+          // it valid
           if (expression.contains("?." + varName) || expression.contains("?[" + varName + "]")) {
             return ValidationResult.success();
           }
         }
-        
+
         ExpressionError error = new ExpressionError(
-            "VariableNotFoundError", 
-            "Variable '" + e.getVariableName() + "' not found", 
+            "VariableNotFoundError",
+            "Variable '" + e.getVariableName() + "' not found",
             createLocationFromVariableName(expression, e.getVariableName()));
         return ValidationResult.failure(error);
       } catch (PropertyNotFoundException e) {
-        // If using null-safe access, property not found exceptions should not be considered errors
+        // If using null-safe access, property not found exceptions should not be
+        // considered errors
         if (expression.contains("?.") || expression.contains("?[")) {
           return ValidationResult.success();
         }
-        
+
         ExpressionError error = new ExpressionError(
-            "PropertyNotFoundError", 
+            "PropertyNotFoundError",
             e.getMessage());
         return ValidationResult.failure(error);
-      } 
+      }
     } catch (Exception e) {
       ExpressionError error = new ExpressionError(
-          "EvaluationError", 
+          "EvaluationError",
           e.getMessage());
       return ValidationResult.failure(error);
     }
   }
-  
+
   /**
    * Creates an error location for a variable name in an expression
    * 
-   * @param expression The full expression string
+   * @param expression   The full expression string
    * @param variableName The variable name to locate
-   * @return An ErrorLocation object, or null if the variable name couldn't be found
+   * @return An ErrorLocation object, or null if the variable name couldn't be
+   *         found
    */
   private ExpressionError.ErrorLocation createLocationFromVariableName(String expression, String variableName) {
     if (expression == null || variableName == null) {
       return null;
     }
-    
+
     // Look for the variable in the expression (prefixed with $)
     int startPos = expression.indexOf("$" + variableName);
-    
+
     if (startPos >= 0) {
       return new ExpressionError.ErrorLocation(
-          startPos, 
+          startPos,
           startPos + variableName.length() + 1, // +1 for the $
           expression);
     }
-    
+
     return null;
+  }
+
+  /**
+   * Gets metadata for all available functions (both built-in and custom).
+   * This creates a temporary context to gather the function information.
+   * 
+   * @return List of FunctionInfo objects describing all available functions
+   */
+  public java.util.List<com.expresso.context.functions.FunctionInfo> getAvailableFunctions() {
+    Context context = new Context();
+    customFunctions.forEach(context::registerFunction);
+    return context.getAvailableFunctions();
+  }
+
+  /**
+   * Gets metadata for a specific function by name.
+   * This creates a temporary context to gather the function information.
+   * 
+   * @param functionName The name of the function
+   * @return FunctionInfo object if found, null otherwise
+   */
+  public com.expresso.context.functions.FunctionInfo getFunctionInfo(String functionName) {
+    Context context = new Context();
+    customFunctions.forEach(context::registerFunction);
+    return context.getFunctionInfo(functionName);
   }
 }

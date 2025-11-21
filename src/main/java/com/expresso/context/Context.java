@@ -293,6 +293,49 @@ public class Context {
     return resolveProperty(target, property, false);
   }
 
+  /**
+   * Gets metadata for all available functions (both built-in and custom).
+   * Custom functions will have limited metadata (name and isBuiltIn flag only).
+   * 
+   * @return List of FunctionInfo objects for all available functions
+   */
+  public List<com.expresso.context.functions.FunctionInfo> getAvailableFunctions() {
+    List<com.expresso.context.functions.FunctionInfo> allFunctions = new java.util.ArrayList<>();
+
+    // Add all built-in functions with full metadata
+    allFunctions.addAll(FunctionRegistry.getAllFunctionInfo());
+
+    // Add custom functions (functions that are not in the built-in registry)
+    java.util.Set<String> builtInNames = allFunctions.stream()
+        .map(com.expresso.context.functions.FunctionInfo::getName)
+        .collect(java.util.stream.Collectors.toSet());
+
+    functions.keySet().stream()
+        .filter(name -> !builtInNames.contains(name))
+        .forEach(name -> {
+          allFunctions.add(com.expresso.context.functions.FunctionInfo.builder(name)
+              .description("Custom function")
+              .returnType("Object")
+              .isBuiltIn(false)
+              .build());
+        });
+
+    return allFunctions;
+  }
+
+  /**
+   * Gets metadata for a specific function by name.
+   * 
+   * @param functionName The name of the function
+   * @return FunctionInfo object if found, null otherwise
+   */
+  public com.expresso.context.functions.FunctionInfo getFunctionInfo(String functionName) {
+    return getAvailableFunctions().stream()
+        .filter(info -> info.getName().equals(functionName))
+        .findFirst()
+        .orElse(null);
+  }
+
   private void registerBuiltInFunctions() {
     // Register all built-in functions from the function registry
     FunctionRegistry.registerAllFunctions(this);

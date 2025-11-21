@@ -14,6 +14,7 @@ For full documentation, visit: [expresso.ghassen.work](https://expresso.ghassen.
 - Null-safe property access and null coalescing operators
 - Array and list access with null-safety
 - Custom function registration
+- **Function discovery and metadata retrieval**
 - Built-in functions for strings, math, and logic operations
 - Type-safe evaluation
 - Comprehensive error handling
@@ -116,6 +117,49 @@ evaluator.registerFunction("add", (args) -> {
 // Use the custom function
 double result = (Double) evaluator.evaluate("add(5, 10)", context);  // Returns 15.0
 ```
+
+### Function Discovery
+
+You can programmatically discover all available functions and their metadata:
+
+```java
+ExpressionEvaluator evaluator = new ExpressionEvaluator();
+
+// Get all available functions (built-in + custom)
+List<FunctionInfo> allFunctions = evaluator.getAvailableFunctions();
+
+// Print function names and descriptions
+allFunctions.forEach(info -> {
+    System.out.println(info.getName() + " - " + info.getDescription());
+});
+
+// Get information about a specific function
+FunctionInfo upperCaseInfo = evaluator.getFunctionInfo("upperCase");
+if (upperCaseInfo != null) {
+    System.out.println("Function: " + upperCaseInfo.getName());
+    System.out.println("Description: " + upperCaseInfo.getDescription());
+    System.out.println("Return Type: " + upperCaseInfo.getReturnType());
+    System.out.println("Parameters:");
+    upperCaseInfo.getParameters().forEach(param -> {
+        System.out.println("  - " + param.getName() + 
+                         " (" + param.getType() + "): " + 
+                         param.getDescription());
+    });
+}
+```
+
+**FunctionInfo Properties:**
+- `getName()` - The function name
+- `getDescription()` - Description of what the function does
+- `getReturnType()` - The return type (e.g., "String", "Number", "Boolean")
+- `getParameters()` - List of parameter information
+- `isBuiltIn()` - Whether it's a built-in function or custom
+
+This is useful for:
+- Building IDE autocomplete features
+- Generating documentation
+- Validating function calls
+- Discovering available functionality
 
 ## Complex Examples
 
