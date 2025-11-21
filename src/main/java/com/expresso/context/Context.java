@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-/** Context class that holds variables and functions for expression evaluation. */
+/**
+ * Context class that holds variables and functions for expression evaluation.
+ */
 public class Context {
   private final Map<String, Object> variables;
   private final Map<String, Function<Object[], Object>> functions;
@@ -19,11 +21,11 @@ public class Context {
     this.functions = new HashMap<>();
     registerBuiltInFunctions();
   }
-  
+
   /**
    * Creates a new Context with a single variable
    * 
-   * @param name The variable name
+   * @param name  The variable name
    * @param value The variable value
    * @return A new Context with the specified variable
    */
@@ -32,7 +34,7 @@ public class Context {
     context.setVariable(name, value);
     return context;
   }
-  
+
   /**
    * Creates a new Context with variables from a map
    * 
@@ -48,17 +50,26 @@ public class Context {
   /**
    * Sets a variable in the context
    *
-   * @param name The variable name
+   * @param name  The variable name
    * @param value The variable value
    */
   public void setVariable(String name, Object value) {
     variables.put(name, value);
   }
-  
+
+  /**
+   * Removes a variable from the context
+   *
+   * @param name The variable name
+   */
+  public void removeVariable(String name) {
+    variables.remove(name);
+  }
+
   /**
    * Sets a variable in the context with a fluent interface
    * 
-   * @param name The variable name
+   * @param name  The variable name
    * @param value The variable value
    * @return This context for method chaining
    */
@@ -66,7 +77,7 @@ public class Context {
     variables.put(name, value);
     return this;
   }
-  
+
   /**
    * Sets multiple variables from a map with a fluent interface
    * 
@@ -101,7 +112,7 @@ public class Context {
   /**
    * Registers a function in the context
    *
-   * @param name The function name
+   * @param name     The function name
    * @param function The function implementation
    */
   public void registerFunction(String name, Function<Object[], Object> function) {
@@ -121,8 +132,8 @@ public class Context {
   /**
    * Resolves a property path on an object
    *
-   * @param target The target object
-   * @param property The property path (e.g., "user.address.city")
+   * @param target     The target object
+   * @param property   The property path (e.g., "user.address.city")
    * @param isNullSafe Whether to use null-safe property access
    * @return The resolved property value
    */
@@ -145,8 +156,7 @@ public class Context {
       int index = Integer.parseInt(indexStr);
 
       // If there's no array property, use the target directly
-      Object array =
-          arrayProperty.isEmpty() ? target : resolveProperty(target, arrayProperty, isNullSafe);
+      Object array = arrayProperty.isEmpty() ? target : resolveProperty(target, arrayProperty, isNullSafe);
 
       if (array == null) {
         return null; // Null-safe access, return null instead of throwing
@@ -170,7 +180,7 @@ public class Context {
       } else {
         return null; // Null-safe access, return null instead of throwing
       }
-      
+
       // Check if there are more properties to resolve after the array access
       if (closingBracketIndex < property.length() - 1) {
         String remainingProperty = property.substring(closingBracketIndex + 1);
@@ -179,7 +189,7 @@ public class Context {
         }
         return resolveProperty(element, remainingProperty, isNullSafe);
       }
-      
+
       return element;
     }
     // Handle regular array access
@@ -191,8 +201,7 @@ public class Context {
       int index = Integer.parseInt(indexStr);
 
       // If there's no array property, use the target directly
-      Object array =
-          arrayProperty.isEmpty() ? target : resolveProperty(target, arrayProperty, isNullSafe);
+      Object array = arrayProperty.isEmpty() ? target : resolveProperty(target, arrayProperty, isNullSafe);
 
       if (array == null) {
         if (isNullSafe) {
@@ -228,7 +237,7 @@ public class Context {
         }
         throw new PropertyAccessException(array, property, "Cannot access index on non-array/list type");
       }
-      
+
       // Check if there are more properties to resolve after the array access
       if (closingBracketIndex < property.length() - 1) {
         String remainingProperty = property.substring(closingBracketIndex + 1);
@@ -237,7 +246,7 @@ public class Context {
         }
         return resolveProperty(element, remainingProperty, isNullSafe);
       }
-      
+
       return element;
     }
 
@@ -257,11 +266,10 @@ public class Context {
         current = ((Map<?, ?>) current).get(part);
       } else {
         try {
-          current =
-              current
-                  .getClass()
-                  .getMethod("get" + Character.toUpperCase(part.charAt(0)) + part.substring(1))
-                  .invoke(current);
+          current = current
+              .getClass()
+              .getMethod("get" + Character.toUpperCase(part.charAt(0)) + part.substring(1))
+              .invoke(current);
         } catch (Exception e) {
           if (isNullSafe) {
             return null;
@@ -277,7 +285,7 @@ public class Context {
   /**
    * Resolves a property path on an object (non-null-safe version)
    *
-   * @param target The target object
+   * @param target   The target object
    * @param property The property path (e.g., "user.address.city")
    * @return The resolved property value
    */

@@ -23,14 +23,16 @@ Expresso provides a rich set of built-in functions and allows you to define cust
 | `contains(str, substr)` | Checks if a string contains a substring | `contains("hello", "el")` | `true` |
 | `startsWith(str, prefix)` | Checks if a string starts with a prefix | `startsWith("hello", "he")` | `true` |
 | `endsWith(str, suffix)` | Checks if a string ends with a suffix | `endsWith("hello", "lo")` | `true` |
-| `concat(str1, str2, ...)` | Concatenates multiple strings | `concat("a", "b", "c")` | `"abc"` |
+| `split(str, delimiter)` | Splits a string into a list | `split("a,b,c", ",")` | `["a", "b", "c"]` |
+| `charAt(str, index)` | Returns character at index | `charAt("hello", 1)` | `"e"` |
+| `indexOf(str, search)` | Returns index of substring | `indexOf("hello", "el")` | `1` |
 
 ### Numeric Functions
 
 | Function | Description | Example | Result |
 |----------|-------------|---------|--------|
-| `min(a, b, ...)` | Returns the smallest value | `min(5, 3, 7)` | `3` |
-| `max(a, b, ...)` | Returns the largest value | `max(5, 3, 7)` | `7` |
+| `min(a, b)` | Returns the smallest value | `min(5, 3)` | `3` |
+| `max(a, b)` | Returns the largest value | `max(5, 3)` | `5` |
 | `abs(num)` | Returns the absolute value | `abs(-5)` | `5` |
 | `round(num, places)` | Rounds to specified decimal places | `round(3.14159, 2)` | `3.14` |
 | `floor(num)` | Rounds down to the nearest integer | `floor(3.7)` | `3` |
@@ -38,6 +40,12 @@ Expresso provides a rich set of built-in functions and allows you to define cust
 | `sqrt(num)` | Returns the square root | `sqrt(16)` | `4` |
 | `pow(base, exponent)` | Raises a number to a power | `pow(2, 3)` | `8` |
 | `random()` | Returns a random number between 0 and 1 | `random()` | `0.7231...` |
+| `sin(num)` | Returns the sine of an angle | `sin(0)` | `0.0` |
+| `cos(num)` | Returns the cosine of an angle | `cos(0)` | `1.0` |
+| `tan(num)` | Returns the tangent of an angle | `tan(0)` | `0.0` |
+| `log(num)` | Returns the natural logarithm | `log(2.718)` | `1.0` |
+| `log10(num)` | Returns the base 10 logarithm | `log10(100)` | `2.0` |
+| `exp(num)` | Returns e raised to the power of num | `exp(1)` | `2.718...` |
 
 ### Collection Functions
 
@@ -46,22 +54,32 @@ Expresso provides a rich set of built-in functions and allows you to define cust
 | `size(collection)` | Returns the collection size | `size([1, 2, 3])` | `3` |
 | `sum(collection)` | Returns the sum of all elements | `sum([1, 2, 3])` | `6` |
 | `avg(collection)` | Returns the average of all elements | `avg([1, 2, 3])` | `2.0` |
-| `join(collection, delimiter)` | Joins elements into a string | `join(['a', 'b', 'c'], ",")` | `"a,b,c"` |
+| `join(delimiter, collection)` | Joins elements into a string | `join(",", ['a', 'b', 'c'])` | `"a,b,c"` |
 | `contains(collection, element)` | Checks if collection contains an element | `contains([1, 2, 3], 2)` | `true` |
 | `filter(collection, expression)` | Filters elements based on a predicate | `filter($users, $item.age > 18)` | `[adult users]` |
 | `map(collection, expression)` | Transforms each element | `map($users, $item.name)` | `[names]` |
 | `sort(collection)` | Sorts elements in ascending order | `sort([3, 1, 2])` | `[1, 2, 3]` |
 | `reverse(collection)` | Reverses the order of elements | `reverse([1, 2, 3])` | `[3, 2, 1]` |
+| `first(collection)` | Returns the first element | `first([1, 2, 3])` | `1` |
+| `last(collection)` | Returns the last element | `last([1, 2, 3])` | `3` |
+| `subList(collection, start, end)` | Returns a sublist | `subList([1, 2, 3, 4], 1, 3)` | `[2, 3]` |
 
 ### Date Functions
 
 | Function | Description | Example | Result |
 |----------|-------------|---------|--------|
-| `now()` | Returns the current date and time | `now()` | `2023-05-20T14:30:15` |
-| `dateFormat(date, pattern)` | Formats a date | `dateFormat(now(), "yyyy-MM-dd")` | `"2023-05-20"` |
-| `dateParse(str, pattern)` | Parses a string to a date | `dateParse("2023-05-20", "yyyy-MM-dd")` | `date object` |
-| `dateAdd(date, amount, unit)` | Adds time to a date | `dateAdd(now(), 1, "day")` | `tomorrow` |
-| `dateDiff(date1, date2, unit)` | Returns the difference between dates | `dateDiff(now(), $futureDate, "days")` | `days between` |
+| `currentDate()` | Returns the current date | `currentDate()` | `2023-05-20` |
+| `currentTime()` | Returns the current time | `currentTime()` | `14:30:15` |
+| `currentDateTime()` | Returns the current date and time | `currentDateTime()` | `2023-05-20T14:30:15` |
+| `formatDate(date, pattern)` | Formats a date | `formatDate(currentDate(), "yyyy-MM-dd")` | `"2023-05-20"` |
+| `parseDate(str, pattern)` | Parses a string to a date | `parseDate("2023-05-20", "yyyy-MM-dd")` | `date object` |
+| `addDays(date, days)` | Adds days to a date | `addDays(currentDate(), 1)` | `tomorrow` |
+| `addMonths(date, months)` | Adds months to a date | `addMonths(currentDate(), 1)` | `next month` |
+| `addYears(date, years)` | Adds years to a date | `addYears(currentDate(), 1)` | `next year` |
+| `daysBetween(date1, date2)` | Returns days between dates | `daysBetween(currentDate(), $futureDate)` | `days` |
+| `year(date)` | Returns the year | `year(currentDate())` | `2023` |
+| `month(date)` | Returns the month (1-12) | `month(currentDate())` | `5` |
+| `dayOfMonth(date)` | Returns the day of month | `dayOfMonth(currentDate())` | `20` |
 
 #### Date and Time Support Examples
 
@@ -149,15 +167,20 @@ Object formattedDate = evaluator.evaluate(
 
 | Function | Description | Example | Result |
 |----------|-------------|---------|--------|
-| `if(condition, trueVal, falseVal)` | Returns value based on condition | `if($age >= 18, "Adult", "Minor")` | `"Adult"` or `"Minor"` |
+| `ifThen(condition, trueVal, falseVal)` | Returns value based on condition | `ifThen($age >= 18, "Adult", "Minor")` | `"Adult"` or `"Minor"` |
 | `coalesce(val1, val2, ...)` | Returns first non-null value | `coalesce($name, "Unknown")` | `$name` or `"Unknown"` |
 | `isNull(value)` | Checks if a value is null | `isNull($name)` | `true` or `false` |
 | `isNumber(value)` | Checks if a value is a number | `isNumber($age)` | `true` or `false` |
 | `isString(value)` | Checks if a value is a string | `isString($name)` | `true` or `false` |
 | `isBoolean(value)` | Checks if a value is a boolean | `isBoolean($active)` | `true` or `false` |
+| `isList(value)` | Checks if a value is a list/array | `isList($items)` | `true` or `false` |
+| `isMap(value)` | Checks if a value is a map | `isMap($user)` | `true` or `false` |
+| `isEmpty(value)` | Checks if a value is empty | `isEmpty($list)` | `true` or `false` |
+| `equals(val1, val2)` | Checks if values are equal | `equals(1, 1)` | `true` |
 | `toString(value)` | Converts a value to string | `toString(123)` | `"123"` |
 | `toNumber(value)` | Converts a value to number | `toNumber("123")` | `123` |
 | `toBoolean(value)` | Converts a value to boolean | `toBoolean("true")` | `true` |
+| `typeof(value)` | Returns the type of value | `typeof("hello")` | `"string"` |
 
 ## Custom Functions
 
@@ -295,4 +318,4 @@ CustomFunctionRegistry registry = new CustomFunctionRegistry(evaluator);
 Double percent = (Double) evaluator.evaluate("percentage(200, 15)", context); // 30.0
 ```
 
-This organized approach to function registration makes your code more maintainable as you add more custom functions. 
+This organized approach to function registration makes your code more maintainable as you add more custom functions.
