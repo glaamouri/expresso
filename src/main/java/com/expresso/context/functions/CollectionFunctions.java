@@ -68,7 +68,6 @@ public class CollectionFunctions implements FunctionProvider {
             } else {
                 throw new IllegalArgumentException("Cannot get subList of type: " + args[0].getClass());
             }
-
             int start = ((Number) args[1]).intValue();
             int end = args.length > 2 ? ((Number) args[2]).intValue() : list.size();
             start = Math.max(0, Math.min(start, list.size()));
@@ -79,13 +78,14 @@ public class CollectionFunctions implements FunctionProvider {
         context.registerFunction("sum", args -> {
             if (args[0] == null)
                 return 0.0;
-            double sum = 0;
+            double sum = 0.0;
             if (args[0] instanceof List) {
                 for (Object item : (List<?>) args[0]) {
                     if (item instanceof Number) {
                         sum += ((Number) item).doubleValue();
                     }
                 }
+                return sum;
             } else if (args[0].getClass().isArray()) {
                 int length = java.lang.reflect.Array.getLength(args[0]);
                 for (int i = 0; i < length; i++) {
@@ -94,15 +94,20 @@ public class CollectionFunctions implements FunctionProvider {
                         sum += ((Number) item).doubleValue();
                     }
                 }
+                return sum;
+            } else {
+                throw new IllegalArgumentException("Argument to sum must be a collection or array");
             }
-            return sum;
         });
 
         context.registerFunction("avg", args -> {
-            if (args[0] == null)
+            if (args[0] == null) {
                 return 0.0;
-            double sum = 0;
+            }
+
+            double sum = 0.0;
             int count = 0;
+
             if (args[0] instanceof List) {
                 List<?> list = (List<?>) args[0];
                 count = list.size();
@@ -112,20 +117,26 @@ public class CollectionFunctions implements FunctionProvider {
                     }
                 }
             } else if (args[0].getClass().isArray()) {
-                count = java.lang.reflect.Array.getLength(args[0]);
-                for (int i = 0; i < count; i++) {
+                int length = java.lang.reflect.Array.getLength(args[0]);
+                count = length;
+                for (int i = 0; i < length; i++) {
                     Object item = java.lang.reflect.Array.get(args[0], i);
                     if (item instanceof Number) {
                         sum += ((Number) item).doubleValue();
                     }
                 }
+            } else {
+                throw new IllegalArgumentException("Argument to avg must be a collection or array");
             }
+
             return count == 0 ? 0.0 : sum / count;
         });
 
         context.registerFunction("sort", args -> {
-            if (args[0] == null)
+            if (args[0] == null) {
                 return null;
+            }
+
             List<Object> list = new ArrayList<>();
             if (args[0] instanceof List) {
                 list.addAll((List<?>) args[0]);
@@ -135,7 +146,7 @@ public class CollectionFunctions implements FunctionProvider {
                     list.add(java.lang.reflect.Array.get(args[0], i));
                 }
             } else {
-                return args[0];
+                throw new IllegalArgumentException("Argument to sort must be a collection or array");
             }
 
             list.sort((a, b) -> {
@@ -160,8 +171,10 @@ public class CollectionFunctions implements FunctionProvider {
         });
 
         context.registerFunction("reverse", args -> {
-            if (args[0] == null)
+            if (args[0] == null) {
                 return null;
+            }
+
             List<Object> list = new ArrayList<>();
             if (args[0] instanceof List) {
                 list.addAll((List<?>) args[0]);
@@ -171,8 +184,9 @@ public class CollectionFunctions implements FunctionProvider {
                     list.add(java.lang.reflect.Array.get(args[0], i));
                 }
             } else {
-                return args[0];
+                throw new IllegalArgumentException("Argument to reverse must be a collection or array");
             }
+
             java.util.Collections.reverse(list);
             return list;
         });
@@ -186,19 +200,16 @@ public class CollectionFunctions implements FunctionProvider {
                         .parameter("collection", "List|Array|Map|String", "The collection to measure")
                         .returnType("Integer")
                         .build(),
-
                 FunctionInfo.builder("first")
                         .description("Returns the first element of a list or array")
                         .parameter("collection", "List|Array", "The collection")
                         .returnType("Object")
                         .build(),
-
                 FunctionInfo.builder("last")
                         .description("Returns the last element of a list or array")
                         .parameter("collection", "List|Array", "The collection")
                         .returnType("Object")
                         .build(),
-
                 FunctionInfo.builder("subList")
                         .description("Returns a sublist from start index to end index")
                         .parameter("collection", "List|Array", "The source collection")
@@ -206,25 +217,21 @@ public class CollectionFunctions implements FunctionProvider {
                         .parameter("end", "Integer", "The end index (exclusive, optional)")
                         .returnType("List")
                         .build(),
-
                 FunctionInfo.builder("sum")
                         .description("Returns the sum of all numbers in a collection")
                         .parameter("collection", "List|Array", "The collection of numbers")
                         .returnType("Number")
                         .build(),
-
                 FunctionInfo.builder("avg")
                         .description("Returns the average of all numbers in a collection")
                         .parameter("collection", "List|Array", "The collection of numbers")
                         .returnType("Number")
                         .build(),
-
                 FunctionInfo.builder("sort")
                         .description("Returns a sorted copy of the collection")
                         .parameter("collection", "List|Array", "The collection to sort")
                         .returnType("List")
                         .build(),
-
                 FunctionInfo.builder("reverse")
                         .description("Returns a reversed copy of the collection")
                         .parameter("collection", "List|Array", "The collection to reverse")

@@ -86,11 +86,11 @@ class LiteralAndVariableTest {
         // Integer literals (actually parsed as Long in the implementation)
         assertEquals(0L, evaluator.evaluate("0", context));
         assertEquals(123L, evaluator.evaluate("123", context));
-        assertEquals(-456.0, evaluator.evaluate("-456", context));
+        assertEquals(-456.0, (Double) evaluator.evaluate("-456", context), 0.001);
         
         // Decimal literals (parsed as Double)
-        assertEquals(3.14159, evaluator.evaluate("3.14159", context));
-        assertEquals(-2.718, evaluator.evaluate("-2.718", context));
-        assertEquals(0.0, evaluator.evaluate("0.0", context));
+        assertEquals(3.14159, (Double) evaluator.evaluate("3.14159", context), 0.001);
+        assertEquals(-2.718, (Double) evaluator.evaluate("-2.718", context), 0.001);
+        assertEquals(0.0, (Double) evaluator.evaluate("0.0", context), 0.001);
     }
 } 

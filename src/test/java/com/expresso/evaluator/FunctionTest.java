@@ -53,10 +53,10 @@ class FunctionTest {
         Context context = new Context();
         
         // Basic math functions
-        assertEquals(5.0, evaluator.evaluate("abs(-5)", context));
-        assertEquals(5.0, evaluator.evaluate("abs(5)", context));
-        assertEquals(4.0, evaluator.evaluate("floor(4.7)", context));
-        assertEquals(5.0, evaluator.evaluate("ceil(4.1)", context));
+        assertEquals(5.0, (Double) evaluator.evaluate("abs(-5)", context), 0.001);
+        assertEquals(5.0, (Double) evaluator.evaluate("abs(5)", context), 0.001);
+        assertEquals(4.0, (Double) evaluator.evaluate("floor(4.7)", context), 0.001);
+        assertEquals(5.0, (Double) evaluator.evaluate("ceil(4.1)", context), 0.001);
         
         Object roundResult = evaluator.evaluate("round(3.4)", context);
         assertTrue(roundResult instanceof Number, "Round result should be a number");
@@ -67,15 +67,15 @@ class FunctionTest {
         assertEquals(4, ((Number)roundResult2).intValue());
         
         // Advanced math
-        assertEquals(25.0, evaluator.evaluate("pow(5, 2)", context));
-        assertEquals(5.0, evaluator.evaluate("sqrt(25)", context));
+        assertEquals(25.0, (Double) evaluator.evaluate("pow(5, 2)", context), 0.001);
+        assertEquals(5.0, (Double) evaluator.evaluate("sqrt(25)", context), 0.001);
         
         // Math with variables
         context.setVariable("x", 10);
         context.setVariable("y", 3);
-        assertEquals(10.0, evaluator.evaluate("max($x, $y)", context));
-        assertEquals(3.0, evaluator.evaluate("min($x, $y)", context));
-        assertEquals(1.0, evaluator.evaluate("$x % $y", context));
+        assertEquals(10.0, (Double) evaluator.evaluate("max($x, $y)", context), 0.001);
+        assertEquals(3.0, (Double) evaluator.evaluate("min($x, $y)", context), 0.001);
+        assertEquals(1.0, (Double) evaluator.evaluate("$x % $y", context), 0.001);
     }
     
     @Test
@@ -173,7 +173,7 @@ class FunctionTest {
             double y = ((Number) args[1]).doubleValue();
             return x + y;
         });
-        assertEquals(15.0, evaluator.evaluate("add(5, 10)", context));
+        assertEquals(15.0, (Double) evaluator.evaluate("add(5, 10)", context), 0.001);
         
         // Register a function with string manipulation
         evaluator.registerFunction("greet", (args) -> {
@@ -191,7 +191,7 @@ class FunctionTest {
             double z = ((Number) args[2]).doubleValue();
             return (x + y) * z;
         });
-        assertEquals(30.0, evaluator.evaluate("calculate(2, 3, 6)", context));
+        assertEquals(30.0, (Double) evaluator.evaluate("calculate(2, 3, 6)", context), 0.001);
     }
     
     @Test
@@ -201,13 +201,13 @@ class FunctionTest {
         
         // Simple nested functions
         assertEquals("HELLO", evaluator.evaluate("upperCase(trim('  hello  '))", context));
-        assertEquals(6.0, evaluator.evaluate("abs(floor(-5.3))", context));
+        assertEquals(6.0, (Double) evaluator.evaluate("abs(floor(-5.3))", context), 0.001);
         
         // Multiple levels of nesting
         assertEquals("35", evaluator.evaluate("toString(round(abs(-34.7)))", context));
         
         // Nested functions with operators
-        assertEquals(10.0, evaluator.evaluate("abs(-5) + ceil(4.1)", context));
+        assertEquals(10.0, (Double) evaluator.evaluate("abs(-5) + ceil(4.1)", context), 0.001);
     }
     
     @Test

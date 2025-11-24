@@ -263,7 +263,11 @@ public class Context {
       }
 
       if (current instanceof Map) {
-        current = ((Map<?, ?>) current).get(part);
+        Map<?, ?> map = (Map<?, ?>) current;
+        if (!map.containsKey(part) && !isNullSafe) {
+          throw new PropertyAccessException(current, part, "Property not found in map");
+        }
+        current = map.get(part);
       } else {
         try {
           current = current
