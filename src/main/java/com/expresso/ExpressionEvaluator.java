@@ -20,11 +20,9 @@ import java.util.function.Function;
  * expressions.
  */
 public class ExpressionEvaluator {
-  private final Parser parser;
   private final Map<String, Function<Object[], Object>> customFunctions = new HashMap<>();
 
   public ExpressionEvaluator() {
-    this.parser = new Parser();
   }
 
   /**
@@ -35,6 +33,7 @@ public class ExpressionEvaluator {
    * @throws SyntaxException if the expression is malformed
    */
   public Expression parse(String expression) {
+    Parser parser = new Parser();
     return parser.parse(expression);
   }
 
